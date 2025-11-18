@@ -1,0 +1,222 @@
+# ===============================================
+# DOCKER COMPOSE - DEVELOPMENT ENVIRONMENT
+# Hot-reloading enabled with volumes
+# ===============================================
+
+version: '3.8'
+
+services:
+  # ===============================================
+  # PostgreSQL Database
+  # ===============================================
+  postgres:
+    image: postgres:16-alpine
+    container_name: insurance-postgres-dev
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: insurance_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ../database/init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - insurance-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ===============================================
+  # Shared Module (build once, used by all services)
+  # ===============================================
+  shared:
+    build:
+      context: ../shared
+      dockerfile: Dockerfile
+    container_name: insurance-shared-dev
+    volumes:
+      - ../shared:/app
+      - /app/node_modules
+    networks:
+      - insurance-network
+
+  # ===============================================
+  # Auth Service
+  # ===============================================
+  auth-service:
+    build:
+      context: ..
+      dockerfile: auth-service/Dockerfile.dev
+    container_name: insurance-auth-dev
+    ports:
+      - "3001:3001"
+    environment:
+      - PORT=3001
+      - NODE_ENV=development
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_NAME=insurance_db
+      - DB_USER=postgres
+      - DB_PASSWORD=postgres
+      - JWT_SECRET=dev-secret-key-change-in-production
+      - JWT_EXPIRES_IN=24h
+    volumes:
+      - ../auth-service:/app
+      - ../shared:/app/shared
+      - /app/node_modules
+    depends_on:
+      postgres:
+        condition: service_healthy
+      shared:
+        condition: service_started
+    networks:
+      - insurance-network
+    restart: unless-stopped
+
+  # ===============================================
+  # Life Insurance Service
+  # ===============================================
+  life-insurance-service:
+    build:
+      context: ..
+      dockerfile: life-insurance-service/Dockerfile.dev
+    container_name: insurance-life-dev
+    ports:
+      - "3002:3002"
+    environment:
+      - PORT=3002
+      - NODE_ENV=development
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_NAME=insurance_db
+      - DB_USER=postgres
+      - DB_PASSWORD=postgres
+      - JWT_SECRET=dev-secret-key-change-in-production
+      - AUTH_SERVICE_URL=http://auth-service:3001
+    volumes:
+      - ../life-insurance-service:/app
+      - ../shared:/app/shared
+      - /app/node_modules
+    depends_on:
+      postgres:
+        condition: service_healthy
+      shared:
+        condition: service_started
+    networks:
+      - insurance-network
+    restart: unless-stopped
+
+  # ===============================================
+  # Rent Insurance Service
+  # ===============================================
+  rent-insurance-service:
+    build:
+      context: ..
+      dockerfile: rent-insurance-service/Dockerfile.dev
+    container_name: insurance-rent-dev
+    ports:
+      - "3003:3003"
+    environment:
+      - PORT=3003
+      - NODE_ENV=development
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_NAME=insurance_db
+      - DB_USER=postgres
+      - DB_PASSWORD=postgres
+      - JWT_SECRET=dev-secret-key-change-in-production
+      - AUTH_SERVICE_URL=http://auth-service:3001
+    volumes:
+      - ../rent-insurance-service:/app
+      - ../shared:/app/shared
+      - /app/node_modules
+    depends_on:
+      postgres:
+        condition: service_healthy
+      shared:
+        condition: service_started
+    networks:
+      - insurance-network
+    restart: unless-stopped
+
+  # ===============================================
+  # Vehicle Insurance Service
+  # ===============================================
+  vehicle-insurance-service:
+    build:
+      context: ..
+      dockerfile: vehicle-insurance-service/Dockerfile.dev
+    container_name: insurance-vehicle-dev
+    ports:
+      - "3004:3004"
+    environment:
+      - PORT=3004
+      - NODE_ENV=development
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_NAME=insurance_db
+      - DB_USER=postgres
+      - DB_PASSWORD=postgres
+      - JWT_SECRET=dev-secret-key-change-in-production
+      - AUTH_SERVICE_URL=http://auth-service:3001
+    volumes:
+      - ../vehicle-insurance-service:/app
+      - ../shared:/app/shared
+      - /app/node_modules
+    depends_on:
+      postgres:
+        condition: service_healthy
+      shared:
+        condition: service_started
+    networks:
+      - insurance-network
+    restart: unless-stopped
+
+  # ===============================================
+  # API Gateway
+  # ===============================================
+  api-gateway:
+    build:
+      context: ..
+      dockerfile: api-gateway/Dockerfile.dev
+    container_name: insurance-gateway-dev
+    ports:
+      - "3000:3000"
+    environment:
+      - PORT=3000
+      - NODE_ENV=development
+      - JWT_SECRET=dev-secret-key-change-in-production
+      - AUTH_SERVICE_URL=http://auth-service:3001
+      - LIFE_SERVICE_URL=http://life-insurance-service:3002
+      - RENT_SERVICE_URL=http://rent-insurance-service:3003
+      - VEHICLE_SERVICE_URL=http://vehicle-insurance-service:3004
+      - RATE_LIMIT_WINDOW_MS=900000
+      - RATE_LIMIT_MAX_REQUESTS=100
+    volumes:
+      - ../api-gateway:/app
+      - ../shared:/app/shared
+      - /app/node_modules
+    depends_on:
+      - auth-service
+      - life-insurance-service
+      - rent-insurance-service
+      - vehicle-insurance-service
+    networks:
+      - insurance-network
+    restart: unless-stopped
+
+# ===============================================
+# Networks
+# ===============================================
+networks:
+  insurance-network:
+    driver: bridge
+
+# ===============================================
+# Volumes
+# ===============================================
+volumes:
+  postgres-data:
