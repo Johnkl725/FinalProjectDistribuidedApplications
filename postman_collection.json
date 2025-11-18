@@ -286,9 +286,9 @@
               }
             ],
             "url": {
-              "raw": "{{base_url}}/api/life-insurance/policies/id/{{policy_id}}",
+              "raw": "{{base_url}}/api/life-insurance/policies/{{policy_id}}",
               "host": ["{{base_url}}"],
-              "path": ["api", "life-insurance", "policies", "id", "{{policy_id}}"]
+              "path": ["api", "life-insurance", "policies", "{{policy_id}}"]
             }
           }
         },
@@ -417,9 +417,34 @@
               }
             ],
             "url": {
-              "raw": "{{base_url}}/api/rent-insurance/policies/id/{{policy_id}}",
+              "raw": "{{base_url}}/api/rent-insurance/policies/{{policy_id}}",
               "host": ["{{base_url}}"],
-              "path": ["api", "rent-insurance", "policies", "id", "{{policy_id}}"]
+              "path": ["api", "rent-insurance", "policies", "{{policy_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Update Rent Insurance Policy Status",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"active\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/rent-insurance/policies/{{policy_id}}/status",
+              "host": ["{{base_url}}"],
+              "path": ["api", "rent-insurance", "policies", "{{policy_id}}", "status"]
             }
           }
         },
@@ -434,43 +459,9 @@
               }
             ],
             "url": {
-              "raw": "{{base_url}}/api/rent-insurance/policies",
+              "raw": "{{base_url}}/api/rent-insurance/admin/policies",
               "host": ["{{base_url}}"],
-              "path": ["api", "rent-insurance", "policies"]
-            }
-          }
-        },
-        {
-          "name": "Activate Rent Insurance Policy (Admin)",
-          "request": {
-            "method": "PUT",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{auth_token}}"
-              }
-            ],
-            "url": {
-              "raw": "{{base_url}}/api/rent-insurance/policies/{{policy_id}}/activate",
-              "host": ["{{base_url}}"],
-              "path": ["api", "rent-insurance", "policies", "{{policy_id}}", "activate"]
-            }
-          }
-        },
-        {
-          "name": "Cancel Rent Insurance Policy",
-          "request": {
-            "method": "PUT",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{auth_token}}"
-              }
-            ],
-            "url": {
-              "raw": "{{base_url}}/api/rent-insurance/policies/{{policy_id}}/cancel",
-              "host": ["{{base_url}}"],
-              "path": ["api", "rent-insurance", "policies", "{{policy_id}}", "cancel"]
+              "path": ["api", "rent-insurance", "admin", "policies"]
             }
           }
         }
@@ -548,9 +539,34 @@
               }
             ],
             "url": {
-              "raw": "{{base_url}}/api/vehicle-insurance/policies/id/{{policy_id}}",
+              "raw": "{{base_url}}/api/vehicle-insurance/policies/{{policy_id}}",
               "host": ["{{base_url}}"],
-              "path": ["api", "vehicle-insurance", "policies", "id", "{{policy_id}}"]
+              "path": ["api", "vehicle-insurance", "policies", "{{policy_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Update Vehicle Insurance Policy Status",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"active\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/vehicle-insurance/policies/{{policy_id}}/status",
+              "host": ["{{base_url}}"],
+              "path": ["api", "vehicle-insurance", "policies", "{{policy_id}}", "status"]
             }
           }
         },
@@ -565,43 +581,9 @@
               }
             ],
             "url": {
-              "raw": "{{base_url}}/api/vehicle-insurance/policies",
+              "raw": "{{base_url}}/api/vehicle-insurance/admin/policies",
               "host": ["{{base_url}}"],
-              "path": ["api", "vehicle-insurance", "policies"]
-            }
-          }
-        },
-        {
-          "name": "Activate Vehicle Insurance Policy (Admin)",
-          "request": {
-            "method": "PUT",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{auth_token}}"
-              }
-            ],
-            "url": {
-              "raw": "{{base_url}}/api/vehicle-insurance/policies/{{policy_id}}/activate",
-              "host": ["{{base_url}}"],
-              "path": ["api", "vehicle-insurance", "policies", "{{policy_id}}", "activate"]
-            }
-          }
-        },
-        {
-          "name": "Cancel Vehicle Insurance Policy",
-          "request": {
-            "method": "PUT",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{auth_token}}"
-              }
-            ],
-            "url": {
-              "raw": "{{base_url}}/api/vehicle-insurance/policies/{{policy_id}}/cancel",
-              "host": ["{{base_url}}"],
-              "path": ["api", "vehicle-insurance", "policies", "{{policy_id}}", "cancel"]
+              "path": ["api", "vehicle-insurance", "admin", "policies"]
             }
           }
         }
