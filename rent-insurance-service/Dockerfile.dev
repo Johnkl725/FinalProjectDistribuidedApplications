@@ -1,0 +1,24 @@
+# ===============================================
+# DOCKERFILE - RENT INSURANCE SERVICE (Development)
+# ===============================================
+
+FROM node:20-alpine
+
+WORKDIR /app
+
+# Copy shared module first
+COPY shared /shared
+WORKDIR /shared
+RUN npm install && npm run build
+
+# Back to service directory
+WORKDIR /app
+
+COPY rent-insurance-service/package*.json ./
+RUN npm install
+
+COPY rent-insurance-service/ ./
+
+EXPOSE 3003
+
+CMD ["npm", "run", "dev"]

@@ -1,0 +1,667 @@
+{
+  "info": {
+    "name": "Insurance Platform API",
+    "description": "Complete API collection for testing the insurance microservices platform",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:3000",
+      "type": "string"
+    },
+    {
+      "key": "auth_token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "user_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "policy_id",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Health Check",
+      "item": [
+        {
+          "name": "API Gateway Health",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/health",
+              "host": ["{{base_url}}"],
+              "path": ["health"]
+            }
+          }
+        },
+        {
+          "name": "Auth Service Health (Direct)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:3001/auth/health",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3001",
+              "path": ["auth", "health"]
+            }
+          }
+        },
+        {
+          "name": "Auth Service Health (via Gateway)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/auth/health",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "health"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Authentication",
+      "item": [
+        {
+          "name": "Register Customer",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    var jsonData = pm.response.json();",
+                  "    if (jsonData.data && jsonData.data.token) {",
+                  "        pm.collectionVariables.set('auth_token', jsonData.data.token);",
+                  "        console.log('Token saved:', jsonData.data.token);",
+                  "    }",
+                  "    if (jsonData.data && jsonData.data.user && jsonData.data.user.id) {",
+                  "        pm.collectionVariables.set('user_id', jsonData.data.user.id);",
+                  "        console.log('User ID saved:', jsonData.data.user.id);",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"customer@example.com\",\n  \"password\": \"SecurePass123!\",\n  \"firstName\": \"John\",\n  \"lastName\": \"Doe\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/register",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "register"]
+            }
+          }
+        },
+        {
+          "name": "Register Admin",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    var jsonData = pm.response.json();",
+                  "    if (jsonData.data && jsonData.data.token) {",
+                  "        pm.collectionVariables.set('auth_token', jsonData.data.token);",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@example.com\",\n  \"password\": \"AdminPass123!\",\n  \"firstName\": \"Admin\",\n  \"lastName\": \"User\",\n  \"role\": \"admin\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/register",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "register"]
+            }
+          }
+        },
+        {
+          "name": "Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    var jsonData = pm.response.json();",
+                  "    if (jsonData.data && jsonData.data.token) {",
+                  "        pm.collectionVariables.set('auth_token', jsonData.data.token);",
+                  "        console.log('Token saved:', jsonData.data.token);",
+                  "    }",
+                  "    if (jsonData.data && jsonData.data.user && jsonData.data.user.id) {",
+                  "        pm.collectionVariables.set('user_id', jsonData.data.user.id);",
+                  "        console.log('User ID saved:', jsonData.data.user.id);",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"customer@example.com\",\n  \"password\": \"SecurePass123!\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/login",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "login"]
+            }
+          }
+        },
+        {
+          "name": "Get Profile",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/auth/me",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "me"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Life Insurance",
+      "item": [
+        {
+          "name": "Create Life Insurance Policy",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    var jsonData = pm.response.json();",
+                  "    if (jsonData.data && jsonData.data.id) {",
+                  "        pm.collectionVariables.set('policy_id', jsonData.data.id);",
+                  "        console.log('Policy ID saved:', jsonData.data.id);",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"coverage_amount\": 500000,\n  \"start_date\": \"2025-01-01\",\n  \"age\": 35,\n  \"medical_history\": \"No pre-existing conditions\",\n  \"smoker\": false,\n  \"beneficiaries\": [\n    {\n      \"name\": \"Jane Doe\",\n      \"relationship\": \"Spouse\",\n      \"percentage\": 60\n    },\n    {\n      \"name\": \"John Doe Jr\",\n      \"relationship\": \"Child\",\n      \"percentage\": 40\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/life-insurance/policies",
+              "host": ["{{base_url}}"],
+              "path": ["api", "life-insurance", "policies"]
+            }
+          }
+        },
+        {
+          "name": "Get My Life Insurance Policies",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/life-insurance/policies",
+              "host": ["{{base_url}}"],
+              "path": ["api", "life-insurance", "policies"]
+            }
+          }
+        },
+        {
+          "name": "Get Life Insurance Policy by ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/life-insurance/policies/id/{{policy_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "life-insurance", "policies", "id", "{{policy_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Get All Life Insurance Policies (Admin)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/life-insurance/policies",
+              "host": ["{{base_url}}"],
+              "path": ["api", "life-insurance", "policies"]
+            }
+          }
+        },
+        {
+          "name": "Activate Life Insurance Policy (Admin)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/life-insurance/policies/{{policy_id}}/activate",
+              "host": ["{{base_url}}"],
+              "path": ["api", "life-insurance", "policies", "{{policy_id}}", "activate"]
+            }
+          }
+        },
+        {
+          "name": "Cancel Life Insurance Policy",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/life-insurance/policies/{{policy_id}}/cancel",
+              "host": ["{{base_url}}"],
+              "path": ["api", "life-insurance", "policies", "{{policy_id}}", "cancel"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Rent Insurance",
+      "item": [
+        {
+          "name": "Create Rent Insurance Policy",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    var jsonData = pm.response.json();",
+                  "    if (jsonData.data && jsonData.data.id) {",
+                  "        pm.collectionVariables.set('policy_id', jsonData.data.id);",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"coverage_amount\": 50000,\n  \"start_date\": \"2025-01-01\",\n  \"address\": \"123 Main St, New York, NY 10001\",\n  \"property_value\": 250000,\n  \"usage_type\": \"residential\",\n  \"square_meters\": 120\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/rent-insurance/policies",
+              "host": ["{{base_url}}"],
+              "path": ["api", "rent-insurance", "policies"]
+            }
+          }
+        },
+        {
+          "name": "Get My Rent Insurance Policies",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/rent-insurance/policies",
+              "host": ["{{base_url}}"],
+              "path": ["api", "rent-insurance", "policies"]
+            }
+          }
+        },
+        {
+          "name": "Get Rent Insurance Policy by ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/rent-insurance/policies/id/{{policy_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "rent-insurance", "policies", "id", "{{policy_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Get All Rent Insurance Policies (Admin)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/rent-insurance/policies",
+              "host": ["{{base_url}}"],
+              "path": ["api", "rent-insurance", "policies"]
+            }
+          }
+        },
+        {
+          "name": "Activate Rent Insurance Policy (Admin)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/rent-insurance/policies/{{policy_id}}/activate",
+              "host": ["{{base_url}}"],
+              "path": ["api", "rent-insurance", "policies", "{{policy_id}}", "activate"]
+            }
+          }
+        },
+        {
+          "name": "Cancel Rent Insurance Policy",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/rent-insurance/policies/{{policy_id}}/cancel",
+              "host": ["{{base_url}}"],
+              "path": ["api", "rent-insurance", "policies", "{{policy_id}}", "cancel"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Vehicle Insurance",
+      "item": [
+        {
+          "name": "Create Vehicle Insurance Policy",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    var jsonData = pm.response.json();",
+                  "    if (jsonData.data && jsonData.data.id) {",
+                  "        pm.collectionVariables.set('policy_id', jsonData.data.id);",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"coverage_amount\": 75000,\n  \"start_date\": \"2025-01-01\",\n  \"make\": \"Toyota\",\n  \"model\": \"Camry\",\n  \"year\": 2023,\n  \"license_plate\": \"ABC-1234\",\n  \"vin\": \"1HGBH41JXMN109186\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/vehicle-insurance/policies",
+              "host": ["{{base_url}}"],
+              "path": ["api", "vehicle-insurance", "policies"]
+            }
+          }
+        },
+        {
+          "name": "Get My Vehicle Insurance Policies",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/vehicle-insurance/policies",
+              "host": ["{{base_url}}"],
+              "path": ["api", "vehicle-insurance", "policies"]
+            }
+          }
+        },
+        {
+          "name": "Get Vehicle Insurance Policy by ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/vehicle-insurance/policies/id/{{policy_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "vehicle-insurance", "policies", "id", "{{policy_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Get All Vehicle Insurance Policies (Admin)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/vehicle-insurance/policies",
+              "host": ["{{base_url}}"],
+              "path": ["api", "vehicle-insurance", "policies"]
+            }
+          }
+        },
+        {
+          "name": "Activate Vehicle Insurance Policy (Admin)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/vehicle-insurance/policies/{{policy_id}}/activate",
+              "host": ["{{base_url}}"],
+              "path": ["api", "vehicle-insurance", "policies", "{{policy_id}}", "activate"]
+            }
+          }
+        },
+        {
+          "name": "Cancel Vehicle Insurance Policy",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/vehicle-insurance/policies/{{policy_id}}/cancel",
+              "host": ["{{base_url}}"],
+              "path": ["api", "vehicle-insurance", "policies", "{{policy_id}}", "cancel"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Admin Operations",
+      "item": [
+        {
+          "name": "Get All Users",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/auth/users",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "users"]
+            }
+          }
+        },
+        {
+          "name": "Get User Statistics",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/auth/stats",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "stats"]
+            }
+          }
+        },
+        {
+          "name": "Deactivate User",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/auth/users/{{user_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "users", "{{user_id}}"]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

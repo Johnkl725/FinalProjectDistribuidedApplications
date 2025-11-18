@@ -1,0 +1,28 @@
+# ===============================================
+# DOCKERFILE - AUTH SERVICE (Development)
+# ===============================================
+
+FROM node:20-alpine
+
+WORKDIR /app
+
+# Copy shared module first
+COPY shared /shared
+WORKDIR /shared
+RUN npm install && npm run build
+
+# Back to service directory
+WORKDIR /app
+
+# Install dependencies
+COPY auth-service/package*.json ./
+RUN npm install
+
+# Copy source code (will be overridden by volume in dev)
+COPY auth-service/ ./
+
+# Expose port
+EXPOSE 3001
+
+# Development command with hot-reload
+CMD ["npm", "run", "dev"]

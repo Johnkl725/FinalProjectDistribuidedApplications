@@ -1,0 +1,16 @@
+{
+  "name": "insurance-platform",
+  "version": "1.0.0",
+  "description": "Insurance Management Platform with Microservices Architecture",
+  "main": "index.js",
+  "scripts": {
+    "dev": "docker-compose -f docker/docker-compose.dev.yml up --build",
+    "prod": "docker-compose -f docker/docker-compose.prod.yml up --build",
+    "down:dev": "docker-compose -f docker/docker-compose.dev.yml down",
+    "down:prod": "docker-compose -f docker/docker-compose.prod.yml down",
+    "logs": "docker-compose -f docker/docker-compose.dev.yml logs -f"
+  },
+  "keywords": ["insurance", "microservices", "insurtech", "pern"],
+  "author": "Your Name",
+  "license": "MIT"
+}
