@@ -1,0 +1,24 @@
+# ===============================================
+# FRONTEND DOCKERFILE - DEVELOPMENT (OPTIMIZADO)
+# ===============================================
+
+FROM node:20-alpine
+
+# Establece el directorio de trabajo
+WORKDIR /app
+
+# Copia solo package.json y package-lock.json (mejor para caché)
+COPY package.json package-lock.json ./
+
+# Instala dependencias
+RUN npm install --force
+
+# Copia el resto del código fuente
+# Esto asegura que la imagen tenga el código si la ejecutas sola
+COPY . .
+
+# Expone el puerto donde Vite sirve la app
+EXPOSE 5173
+
+# Comando para desarrollo con hot-reload
+CMD ["npm", "run", "dev", "--", "--host"]

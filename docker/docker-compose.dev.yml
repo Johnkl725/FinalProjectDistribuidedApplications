@@ -30,7 +30,7 @@ services:
       retries: 5
 
   # ===============================================
-  # Shared Module (build once, used by all services)
+  # Shared Module
   # ===============================================
   shared:
     build:
@@ -208,6 +208,25 @@ services:
       - insurance-network
     restart: unless-stopped
 
+  # ===============================================
+  # Frontend (React + Vite)
+  # ===============================================
+  frontend:
+    build:
+      context: ../frontend
+      dockerfile: Dockerfile.dev
+    container_name: insurance-frontend-dev
+    ports:
+      - "5173:5173"
+    volumes:
+      - ../frontend:/app         # Código local
+      - /app/node_modules        # Volumen anónimo para módulos Linux
+    depends_on:
+      - api-gateway
+    networks:
+      - insurance-network
+    restart: unless-stopped
+
 # ===============================================
 # Networks
 # ===============================================
@@ -220,3 +239,4 @@ networks:
 # ===============================================
 volumes:
   postgres-data:
+  frontend-node-modules:

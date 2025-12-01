@@ -189,6 +189,25 @@ services:
         max-size: "10m"
         max-file: "3"
 
+  # ===============================================
+  # Frontend (React + Vite with Nginx)
+  # ===============================================
+frontend:
+  build:
+    context: ../frontend
+    dockerfile: Dockerfile.dev
+  container_name: insurance-frontend-dev
+  ports:
+    - "5173:5173"
+  volumes:
+    - ../frontend:/app          # Tu código local para hot-reload
+    - /app/node_modules         # Volumen anónimo para módulos Linux
+  depends_on:
+    - api-gateway
+  networks:
+    - insurance-network
+  restart: unless-stopped
+
 # ===============================================
 # Networks
 # ===============================================
