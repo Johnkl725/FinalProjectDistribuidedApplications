@@ -14,11 +14,10 @@ export default function VehicleInsuranceQuote() {
     coverage_amount: '50000',
     start_date: new Date().toISOString().split('T')[0],
     end_date: '',
-    vehicle_type: 'sedan',
-    vehicle_value: '',
-    vehicle_year: new Date().getFullYear(),
-    vehicle_brand: '',
-    vehicle_model: '',
+    year: new Date().getFullYear(),
+    make: '',
+    model: '',
+    vin: '',
     license_plate: ''
   });
 
@@ -37,8 +36,7 @@ export default function VehicleInsuranceQuote() {
         coverage_amount: parseInt(formData.coverage_amount),
         start_date: formData.start_date,
         end_date: formData.end_date || null,
-        vehicle_type: formData.vehicle_type,
-        vehicle_value: parseInt(formData.vehicle_value)
+        year: parseInt(formData.year)
       });
 
       setQuote(response.data.data);
@@ -58,11 +56,10 @@ export default function VehicleInsuranceQuote() {
         coverage_amount: parseInt(formData.coverage_amount),
         start_date: formData.start_date,
         end_date: formData.end_date || null,
-        vehicle_type: formData.vehicle_type,
-        vehicle_value: parseInt(formData.vehicle_value),
-        vehicle_year: parseInt(formData.vehicle_year),
-        vehicle_brand: formData.vehicle_brand,
-        vehicle_model: formData.vehicle_model,
+        year: parseInt(formData.year),
+        make: formData.make,
+        model: formData.model,
+        vin: formData.vin,
         license_plate: formData.license_plate
       });
 
@@ -111,33 +108,23 @@ export default function VehicleInsuranceQuote() {
           <form onSubmit={handleGetQuote} className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Tipo de Vehículo</label>
-                <select name="vehicle_type" value={formData.vehicle_type} onChange={handleChange} className="input-field" required>
-                  <option value="sedan">Sedán</option>
-                  <option value="suv">SUV</option>
-                  <option value="truck">Camioneta</option>
-                  <option value="motorcycle">Motocicleta</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Valor del Vehículo</label>
-                <input type="number" name="vehicle_value" value={formData.vehicle_value} onChange={handleChange} className="input-field" placeholder="25000" required />
-              </div>
-
-              <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Marca</label>
-                <input type="text" name="vehicle_brand" value={formData.vehicle_brand} onChange={handleChange} className="input-field" placeholder="Toyota" required />
+                <input type="text" name="make" value={formData.make} onChange={handleChange} className="input-field" placeholder="Toyota" required />
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Modelo</label>
-                <input type="text" name="vehicle_model" value={formData.vehicle_model} onChange={handleChange} className="input-field" placeholder="Corolla" required />
+                <input type="text" name="model" value={formData.model} onChange={handleChange} className="input-field" placeholder="Corolla" required />
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Año</label>
-                <input type="number" name="vehicle_year" min="1900" max={new Date().getFullYear() + 1} value={formData.vehicle_year} onChange={handleChange} className="input-field" required />
+                <input type="number" name="year" min="1900" max={new Date().getFullYear() + 1} value={formData.year} onChange={handleChange} className="input-field" required />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">VIN (17 caracteres)</label>
+                <input type="text" name="vin" value={formData.vin} onChange={handleChange} className="input-field" placeholder="1HGBH41JXMN109186" minLength="17" maxLength="17" required />
               </div>
 
               <div>
@@ -159,6 +146,11 @@ export default function VehicleInsuranceQuote() {
                 <label className="block text-sm font-medium text-gray-700 mb-2">Fecha de Inicio</label>
                 <input type="date" name="start_date" value={formData.start_date} onChange={handleChange} className="input-field" required />
               </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Fecha de Fin</label>
+                <input type="date" name="end_date" value={formData.end_date} onChange={handleChange} className="input-field" required />
+              </div>
             </div>
 
             <button type="submit" disabled={loading} className="btn-primary w-full disabled:opacity-50">
@@ -178,9 +170,10 @@ export default function VehicleInsuranceQuote() {
           <div className="bg-gray-50 rounded-lg p-6 mb-6">
             <h3 className="font-semibold text-gray-900 mb-4">Detalles del Vehículo</h3>
             <div className="grid grid-cols-2 gap-4 text-sm">
-              <div><p className="text-gray-600">Marca:</p><p className="font-medium">{formData.vehicle_brand}</p></div>
-              <div><p className="text-gray-600">Modelo:</p><p className="font-medium">{formData.vehicle_model}</p></div>
-              <div><p className="text-gray-600">Año:</p><p className="font-medium">{formData.vehicle_year}</p></div>
+              <div><p className="text-gray-600">Marca:</p><p className="font-medium">{formData.make}</p></div>
+              <div><p className="text-gray-600">Modelo:</p><p className="font-medium">{formData.model}</p></div>
+              <div><p className="text-gray-600">Año:</p><p className="font-medium">{formData.year}</p></div>
+              <div><p className="text-gray-600">VIN:</p><p className="font-medium">{formData.vin}</p></div>
               <div><p className="text-gray-600">Placa:</p><p className="font-medium">{formData.license_plate}</p></div>
             </div>
           </div>

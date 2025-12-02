@@ -17,7 +17,7 @@ CREATE TABLE users (
     password_hash VARCHAR(255) NOT NULL,
     first_name VARCHAR(100) NOT NULL,
     last_name VARCHAR(100) NOT NULL,
-    role VARCHAR(20) DEFAULT 'customer' CHECK (role IN ('customer', 'admin')),
+    role VARCHAR(20) DEFAULT 'customer' CHECK (role IN ('customer', 'employee', 'admin')),
     is_active BOOLEAN DEFAULT true,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
@@ -147,6 +147,7 @@ FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 -- Password for all demo users: "Password123!" (hashed with bcrypt)
 INSERT INTO users (email, password_hash, first_name, last_name, role) VALUES
 ('admin@insurance.com', '$2b$10$X7QZ1YQZ1YQZ1YQZ1YQZ1Oe8Z1YQZ1YQZ1YQZ1YQZ1YQZ1YQZ1YQZ1Y', 'Admin', 'User', 'admin'),
+('employee@insurance.com', '$2b$10$X7QZ1YQZ1YQZ1YQZ1YQZ1Oe8Z1YQZ1YQZ1YQZ1YQZ1YQZ1YQZ1YQZ1Y', 'Employee', 'User', 'employee'),
 ('john.doe@email.com', '$2b$10$X7QZ1YQZ1YQZ1YQZ1YQZ1Oe8Z1YQZ1YQZ1YQZ1YQZ1YQZ1YQZ1YQZ1Y', 'John', 'Doe', 'customer'),
 ('jane.smith@email.com', '$2b$10$X7QZ1YQZ1YQZ1YQZ1YQZ1Oe8Z1YQZ1YQZ1YQZ1YQZ1YQZ1YQZ1YQZ1Y', 'Jane', 'Smith', 'customer');
 

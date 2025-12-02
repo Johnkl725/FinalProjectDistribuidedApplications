@@ -198,6 +198,98 @@ export class AuthController {
   };
 
   /**
+   * Create employee (admin only)
+   * POST /auth/employees
+   */
+  createEmployee = async (req: Request, res: Response): Promise<void> => {
+    try {
+      const { email, password, first_name, last_name, firstName, lastName } = req.body;
+
+      const finalFirstName = first_name || firstName;
+      const finalLastName = last_name || lastName;
+
+      if (!email || !password || !finalFirstName || !finalLastName) {
+        res.status(HTTP_STATUS.BAD_REQUEST).json(
+          errorResponse('Missing required fields: email, password, firstName, lastName')
+        );
+        return;
+      }
+
+      const result = await this.authService.register({
+        email,
+        password,
+        first_name: finalFirstName,
+        last_name: finalLastName,
+        role: 'employee',
+      });
+
+      res.status(HTTP_STATUS.CREATED).json(
+        successResponse(result, 'Employee created successfully')
+      );
+    } catch (error: any) {
+      res.status(HTTP_STATUS.BAD_REQUEST).json(
+        errorResponse(error.message)
+      );
+    }
+  };
+
+  /**
+   * Update user role (admin only)
+   * PUT /auth/users/:id/role
+   */
+  updateUserRole = async (req: Request, res: Response): Promise<void> => {
+    try {
+      const userId = parseInt(req.params.id);
+      const { role } = req.body;
+
+      if (!role || !['customer', 'employee', 'admin'].includes(role)) {
+        res.status(HTTP_STATUS.BAD_REQUEST).json(
+          errorResponse('Invalid role. Must be customer, employee, or admin')
+        );
+        return;
+      }
+
+      const user = await this.authService.updateUserRole(userId, role);
+
+      res.status(HTTP_STATUS.OK).json(
+        successResponse(user, 'User role updated successfully')
+      );
+    } catch (error: any) {
+      res.status(HTTP_STATUS.BAD_REQUEST).json(
+        errorResponse(error.message)
+      );
+    }
+  };
+
+  /**
+   * Delete user (admin only)
+   * DELETE /auth/users/:id
+   */
+  deleteUser = async (req: Request, res: Response): Promise<void> => {
+    try {
+      const userId = parseInt(req.params.id);
+      const currentUserId = (req as any).user.userId;
+
+      if (userId === currentUserId) {
+        res.status(HTTP_STATUS.BAD_REQUEST).json(
+          errorResponse('Cannot delete your own account')
+        );
+        return;
+      }
+
+      await this.authService.deleteUser(userId);
+
+      res.status(HTTP_STATUS.OK).json(
+        successResponse(null, 'User deleted successfully')
+      );
+    } catch (error: any) {
+      res.status(HTTP_STATUS.BAD_REQUEST).json(
+        errorResponse(error.message)
+      );
+    }
+  };
+
+  /**
    * Health check
    * GET /auth/health
    */

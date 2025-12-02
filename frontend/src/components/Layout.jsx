@@ -14,11 +14,12 @@ import {
   Car,
   Building,
   Users,
-  BarChart3
+  BarChart3,
+  Clock
 } from 'lucide-react';
 
 export default function Layout({ children }) {
-  const { user, logout, isAdmin } = useAuth();
+  const { user, logout, isAdmin, isEmployee, isStaff } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -30,25 +31,43 @@ export default function Layout({ children }) {
 
   const navigation = [
     { name: 'Dashboard', href: '/dashboard', icon: Home },
-    {
-      name: 'Cotizar Seguros',
-      icon: Calculator,
-      submenu: [
-        { name: 'Seguro de Vida', href: '/quotes/life', icon: Heart },
-        { name: 'Seguro de Vehículo', href: '/quotes/vehicle', icon: Car },
-        { name: 'Seguro de Renta', href: '/quotes/rent', icon: Building },
-      ]
-    },
-    { name: 'Mis Pólizas', href: '/policies', icon: FileText },
-    { name: 'Mi Perfil', href: '/profile', icon: User },
   ];
 
+  // Opciones para usuarios comunes
+  if (!isStaff) {
+    navigation.push(
+      {
+        name: 'Cotizar Seguros',
+        icon: Calculator,
+        submenu: [
+          { name: 'Seguro de Vida', href: '/quotes/life', icon: Heart },
+          { name: 'Seguro de Vehículo', href: '/quotes/vehicle', icon: Car },
+          { name: 'Seguro de Renta', href: '/quotes/rent', icon: Building },
+        ]
+      },
+      { name: 'Mis Pólizas', href: '/policies', icon: FileText }
+    );
+  }
+
+  // Opciones para empleados y admins
+  if (isStaff) {
+    navigation.push(
+      { name: 'Todas las Pólizas', href: '/staff/policies', icon: FileText },
+      { name: 'Pólizas Pendientes', href: '/staff/pending-policies', icon: Clock }
+    );
+  }
+
+  // Opciones solo para admins
   if (isAdmin) {
     navigation.push(
-      { name: 'Usuarios', href: '/admin/users', icon: Users },
+      { name: 'Gestión de Usuarios', href: '/admin/users', icon: Users },
+      { name: 'Gestión de Empleados', href: '/admin/employees', icon: Users },
       { name: 'Estadísticas', href: '/admin/stats', icon: BarChart3 }
     );
   }
+
+  // Perfil disponible para todos
+  navigation.push({ name: 'Mi Perfil', href: '/profile', icon: User });
 
   const isActive = (path) => location.pathname === path;
 
@@ -78,8 +97,13 @@ export default function Layout({ children }) {
               </div>
               <div className="flex items-center space-x-2">
                 {isAdmin && (
-                  <span className="px-2 py-1 text-xs font-semibold text-primary-700 bg-primary-100 rounded-full">
+                  <span className="px-2 py-1 text-xs font-semibold text-red-700 bg-red-100 rounded-full">
                     Admin
+                  </span>
+                )}
+                {isEmployee && (
+                  <span className="px-2 py-1 text-xs font-semibold text-blue-700 bg-blue-100 rounded-full">
+                    Empleado
                   </span>
                 )}
                 <button

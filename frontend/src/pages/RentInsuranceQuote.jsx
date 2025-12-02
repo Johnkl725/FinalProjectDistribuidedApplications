@@ -14,10 +14,10 @@ export default function RentInsuranceQuote() {
     coverage_amount: '30000',
     start_date: new Date().toISOString().split('T')[0],
     end_date: '',
-    monthly_rent: '',
-    property_type: 'apartment',
-    property_address: '',
-    lease_term_months: '12'
+    address: '',
+    property_value: '',
+    usage_type: 'residential',
+    square_meters: ''
   });
 
   const handleChange = (e) => {
@@ -35,8 +35,8 @@ export default function RentInsuranceQuote() {
         coverage_amount: parseInt(formData.coverage_amount),
         start_date: formData.start_date,
         end_date: formData.end_date || null,
-        monthly_rent: parseInt(formData.monthly_rent),
-        property_type: formData.property_type
+        property_value: parseInt(formData.property_value),
+        usage_type: formData.usage_type
       });
 
       setQuote(response.data.data);
@@ -53,10 +53,13 @@ export default function RentInsuranceQuote() {
 
     try {
       await rentInsuranceAPI.createPolicy({
-        ...formData,
         coverage_amount: parseInt(formData.coverage_amount),
-        monthly_rent: parseInt(formData.monthly_rent),
-        lease_term_months: parseInt(formData.lease_term_months)
+        start_date: formData.start_date,
+        end_date: formData.end_date || null,
+        address: formData.address,
+        property_value: parseInt(formData.property_value),
+        usage_type: formData.usage_type,
+        square_meters: parseInt(formData.square_meters)
       });
 
       setSuccess('¡Póliza creada exitosamente!');
@@ -103,24 +106,32 @@ export default function RentInsuranceQuote() {
           <h2 className="text-2xl font-bold text-gray-900 mb-6">Información de la Propiedad</h2>
           <form onSubmit={handleGetQuote} className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Tipo de Propiedad</label>
-                <select name="property_type" value={formData.property_type} onChange={handleChange} className="input-field" required>
-                  <option value="apartment">Apartamento</option>
-                  <option value="house">Casa</option>
-                  <option value="studio">Estudio</option>
-                  <option value="condo">Condominio</option>
-                </select>
+              <div className="md:col-span-2">
+                <label className="block text-sm font-medium text-gray-700 mb-2">Dirección de la Propiedad</label>
+                <input type="text" name="address" value={formData.address} onChange={handleChange} className="input-field" placeholder="Calle 123, Lima" required />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Renta Mensual</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Valor de la Propiedad</label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                     <DollarSign className="h-5 w-5 text-gray-400" />
                   </div>
-                  <input type="number" name="monthly_rent" value={formData.monthly_rent} onChange={handleChange} className="input-field pl-10" placeholder="1500" required />
+                  <input type="number" name="property_value" value={formData.property_value} onChange={handleChange} className="input-field pl-10" placeholder="150000" required />
                 </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Metros Cuadrados</label>
+                <input type="number" name="square_meters" value={formData.square_meters} onChange={handleChange} className="input-field" placeholder="80" required />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Tipo de Uso</label>
+                <select name="usage_type" value={formData.usage_type} onChange={handleChange} className="input-field" required>
+                  <option value="residential">Residencial</option>
+                  <option value="commercial">Comercial</option>
+                </select>
               </div>
 
               <div>
@@ -134,23 +145,13 @@ export default function RentInsuranceQuote() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Duración del Contrato (meses)</label>
-                <input type="number" name="lease_term_months" min="1" max="60" value={formData.lease_term_months} onChange={handleChange} className="input-field" required />
-              </div>
-
-              <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-gray-700 mb-2">Dirección</label>
-                <input type="text" name="property_address" value={formData.property_address} onChange={handleChange} className="input-field" placeholder="Calle 123, Lima" required />
-              </div>
-
-              <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Fecha de Inicio</label>
                 <input type="date" name="start_date" value={formData.start_date} onChange={handleChange} className="input-field" required />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Fecha de Fin (Opcional)</label>
-                <input type="date" name="end_date" value={formData.end_date} onChange={handleChange} className="input-field" />
+                <label className="block text-sm font-medium text-gray-700 mb-2">Fecha de Fin</label>
+                <input type="date" name="end_date" value={formData.end_date} onChange={handleChange} className="input-field" required />
               </div>
             </div>
 

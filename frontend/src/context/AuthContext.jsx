@@ -72,6 +72,8 @@ export const AuthProvider = ({ children }) => {
     logout,
     isAuthenticated: !!token,
     isAdmin: user?.role === 'admin',
+    isEmployee: user?.role === 'employee',
+    isStaff: user?.role === 'admin' || user?.role === 'employee',
   };
 
   if (loading) {

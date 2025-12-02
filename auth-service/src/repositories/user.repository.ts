@@ -56,13 +56,22 @@ export class UserRepository extends BaseRepository<User> {
   }
 
   /**
+   * Delete user
+   */
+  async deleteUser(id: number): Promise<boolean> {
+    const result = await this.delete(id);
+    return result;
+  }
+
+  /**
    * Get user statistics
    */
   async getUserStats() {
     const query = `
-      SELECT 
+      SELECT
         COUNT(*) as total_users,
         COUNT(CASE WHEN role = 'customer' THEN 1 END) as customers,
+        COUNT(CASE WHEN role = 'employee' THEN 1 END) as employees,
         COUNT(CASE WHEN role = 'admin' THEN 1 END) as admins,
         COUNT(CASE WHEN is_active = true THEN 1 END) as active_users
       FROM users

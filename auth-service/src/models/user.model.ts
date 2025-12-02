@@ -8,7 +8,7 @@ export interface User {
   password_hash?: string;
   first_name: string;
   last_name: string;
-  role: 'customer' | 'admin';
+  role: 'customer' | 'employee' | 'admin';
   is_active?: boolean;
   created_at?: Date;
   updated_at?: Date;
@@ -19,7 +19,7 @@ export interface UserRegistration {
   password: string;
   first_name: string;
   last_name: string;
-  role?: 'customer' | 'admin';
+  role?: 'customer' | 'employee' | 'admin';
 }
 
 export interface UserLogin {

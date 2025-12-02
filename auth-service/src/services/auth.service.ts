@@ -178,6 +178,29 @@ export class AuthService {
   }
 
   /**
+   * Update user role (admin only)
+   */
+  async updateUserRole(userId: number, role: 'customer' | 'employee' | 'admin'): Promise<UserResponse> {
+    const updatedUser = await this.userRepository.updateUser(userId, { role });
+    if (!updatedUser) {
+      throw new Error('User not found');
+    }
+    return this.sanitizeUser(updatedUser);
+  }
+
+  /**
+   * Delete user (admin only)
+   */
+  async deleteUser(userId: number): Promise<void> {
+    const user = await this.userRepository.findById(userId);
+    if (!user) {
+      throw new Error('User not found');
+    }
+
+    await this.userRepository.deleteUser(userId);
+  }
+
+  /**
    * Remove sensitive data from user object
    */
   private sanitizeUser(user: User): UserResponse {

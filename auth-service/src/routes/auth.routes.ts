@@ -30,6 +30,9 @@ router.post('/change-password', authMiddleware, authController.changePassword);
 // Admin routes (require authentication + admin role)
 router.get('/users', authMiddleware, adminMiddleware, authController.getAllUsers);
 router.get('/stats', authMiddleware, adminMiddleware, authController.getUserStats);
+router.post('/employees', authMiddleware, adminMiddleware, authController.createEmployee);
+router.put('/users/:id/role', authMiddleware, adminMiddleware, authController.updateUserRole);
+router.delete('/users/:id', authMiddleware, adminMiddleware, authController.deleteUser);
 
 export default router;
 

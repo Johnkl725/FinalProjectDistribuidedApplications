@@ -13,6 +13,15 @@ import RentInsuranceQuote from './pages/RentInsuranceQuote';
 import MyPolicies from './pages/MyPolicies';
 import Profile from './pages/Profile';
 
+// Admin Pages
+import UserManagement from './pages/admin/UserManagement';
+import EmployeeManagement from './pages/admin/EmployeeManagement';
+import AdminStats from './pages/admin/AdminStats';
+
+// Staff Pages
+import AllPolicies from './pages/staff/AllPolicies';
+import PendingPolicies from './pages/staff/PendingPolicies';
+
 function App() {
   return (
     <AuthProvider>
@@ -84,6 +93,63 @@ function App() {
               <ProtectedRoute>
                 <Layout>
                   <Profile />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Admin Routes */}
+          <Route
+            path="/admin/users"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <UserManagement />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/admin/employees"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <EmployeeManagement />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/admin/stats"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <AdminStats />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Staff Routes */}
+          <Route
+            path="/staff/policies"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <AllPolicies />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/staff/pending-policies"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <PendingPolicies />
                 </Layout>
               </ProtectedRoute>
             }
