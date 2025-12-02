@@ -42,8 +42,69 @@ export class UserRepository extends BaseRepository<User> {
    * Get all users (admin only)
    */
   async getAllUsers(): Promise<User[]> {
-    const query = 'SELECT id, email, first_name, last_name, role, is_active, created_at FROM users ORDER BY created_at DESC';
+    const query = `
+      SELECT
+        u.id,
+        u.email,
+        u.first_name,
+        u.last_name,
+        u.role,
+        u.department_id,
+        u.phone,
+        u.is_active,
+        u.created_at
+      FROM users u
+      ORDER BY u.created_at DESC
+    `;
     const result = await this.executeQuery<User>(query);
+    return result.rows;
+  }
+
+  /**
+   * Get employees with department info
+   */
+  async getEmployeesWithDepartment(): Promise<any[]> {
+    const query = `
+      SELECT
+        u.id,
+        u.email,
+        u.first_name,
+        u.last_name,
+        u.role,
+        u.department_id,
+        u.phone,
+        u.is_active,
+        u.created_at,
+        d.name as department_name
+      FROM users u
+      LEFT JOIN departments d ON u.department_id = d.id
+      WHERE u.role = 'employee'
+      ORDER BY u.created_at DESC
+    `;
+    const result = await this.executeQuery(query);
+    return result.rows;
+  }
+
+  /**
+   * Get employees by department
+   */
+  async getEmployeesByDepartment(departmentId: number): Promise<User[]> {
+    const query = `
+      SELECT
+        u.id,
+        u.email,
+        u.first_name,
+        u.last_name,
+        u.role,
+        u.department_id,
+        u.phone,
+        u.is_active,
+        u.created_at
+      FROM users u
+      WHERE u.role = 'employee' AND u.department_id = $1
+      ORDER BY u.first_name ASC
+    `;
+    const result = await this.executeQuery<User>(query, [departmentId]);
     return result.rows;
   }
 

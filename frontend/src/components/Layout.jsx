@@ -62,6 +62,7 @@ export default function Layout({ children }) {
     navigation.push(
       { name: 'Gestión de Usuarios', href: '/admin/users', icon: Users },
       { name: 'Gestión de Empleados', href: '/admin/employees', icon: Users },
+      { name: 'Departamentos', href: '/admin/departments', icon: Building },
       { name: 'Estadísticas', href: '/admin/stats', icon: BarChart3 }
     );
   }

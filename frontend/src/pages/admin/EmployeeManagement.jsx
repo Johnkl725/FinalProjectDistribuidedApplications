@@ -1,33 +1,37 @@
 import { useState, useEffect } from 'react';
-import { UserPlus, Users, Trash2, AlertCircle, CheckCircle } from 'lucide-react';
+import { UserPlus, Users, Trash2, AlertCircle, CheckCircle, Edit, X } from 'lucide-react';
 import axios from 'axios';
 
 export default function EmployeeManagement() {
   const [employees, setEmployees] = useState([]);
+  const [departments, setDepartments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [showForm, setShowForm] = useState(false);
+  const [editingEmployee, setEditingEmployee] = useState(null);
   const [formData, setFormData] = useState({
     email: '',
     password: '',
     first_name: '',
-    last_name: ''
+    last_name: '',
+    department_id: '',
+    phone: ''
   });
 
   useEffect(() => {
     fetchEmployees();
+    fetchDepartments();
   }, []);
 
   const fetchEmployees = async () => {
     setLoading(true);
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.get('http://localhost:3000/api/auth/users', {
+      const response = await axios.get('http://localhost:3000/api/auth/employees', {
         headers: { Authorization: `Bearer ${token}` }
       });
-      const employeeUsers = response.data.data.filter(u => u.role === 'employee');
-      setEmployees(employeeUsers);
+      setEmployees(response.data.data);
     } catch (err) {
       setError('Error al cargar empleados');
     } finally {
@@ -35,22 +39,80 @@ export default function EmployeeManagement() {
     }
   };
 
-  const createEmployee = async (e) => {
+  const fetchDepartments = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get('http://localhost:3000/api/auth/departments', {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setDepartments(response.data.data);
+    } catch (err) {
+      console.error('Error al cargar departamentos');
+    }
+  };
+
+  const resetForm = () => {
+    setFormData({
+      email: '',
+      password: '',
+      first_name: '',
+      last_name: '',
+      department_id: '',
+      phone: ''
+    });
+    setEditingEmployee(null);
+    setShowForm(false);
+  };
+
+  const handleEdit = (employee) => {
+    setEditingEmployee(employee);
+    setFormData({
+      email: employee.email,
+      password: '',
+      first_name: employee.first_name,
+      last_name: employee.last_name,
+      department_id: employee.department_id || '',
+      phone: employee.phone || ''
+    });
+    setShowForm(true);
+  };
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
     try {
       const token = localStorage.getItem('token');
-      await axios.post(
-        'http://localhost:3000/api/auth/employees',
-        formData,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      setSuccess('Empleado creado exitosamente');
-      setShowForm(false);
-      setFormData({ email: '', password: '', first_name: '', last_name: '' });
+
+      if (editingEmployee) {
+        // Actualizar empleado
+        const updateData = {
+          first_name: formData.first_name,
+          last_name: formData.last_name,
+          email: formData.email,
+          department_id: formData.department_id || null,
+          phone: formData.phone || null
+        };
+
+        await axios.put(
+          `http://localhost:3000/api/auth/employees/${editingEmployee.id}`,
+          updateData,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        setSuccess('Empleado actualizado exitosamente');
+      } else {
+        // Crear empleado
+        await axios.post(
+          'http://localhost:3000/api/auth/employees',
+          formData,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        setSuccess('Empleado creado exitosamente');
+      }
+
+      resetForm();
       fetchEmployees();
       setTimeout(() => setSuccess(''), 3000);
     } catch (err) {
-      setError(err.response?.data?.message || 'Error al crear empleado');
+      setError(err.response?.data?.message || 'Error al guardar empleado');
       setTimeout(() => setError(''), 3000);
     }
   };
@@ -72,6 +134,23 @@ export default function EmployeeManagement() {
     }
   };
 
+  const assignDepartment = async (employeeId, departmentId) => {
+    try {
+      const token = localStorage.getItem('token');
+      await axios.put(
+        `http://localhost:3000/api/auth/employees/${employeeId}/department`,
+        { department_id: departmentId || null },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      setSuccess('Departamento asignado exitosamente');
+      fetchEmployees();
+      setTimeout(() => setSuccess(''), 3000);
+    } catch (err) {
+      setError('Error al asignar departamento');
+      setTimeout(() => setError(''), 3000);
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
@@ -88,15 +167,18 @@ export default function EmployeeManagement() {
             <Users className="h-12 w-12 mr-4" />
             <div>
               <h1 className="text-3xl font-bold">Gestión de Empleados</h1>
-              <p className="text-blue-100">Administra el equipo de empleados</p>
+              <p className="text-blue-100">Administra el equipo de empleados y sus asignaciones</p>
             </div>
           </div>
           <button
-            onClick={() => setShowForm(!showForm)}
+            onClick={() => {
+              resetForm();
+              setShowForm(!showForm);
+            }}
             className="bg-white text-blue-700 px-6 py-2 rounded-lg font-semibold hover:bg-blue-50 transition-colors flex items-center"
           >
-            <UserPlus className="h-5 w-5 mr-2" />
-            Nuevo Empleado
+            {showForm ? <X className="h-5 w-5 mr-2" /> : <UserPlus className="h-5 w-5 mr-2" />}
+            {showForm ? 'Cancelar' : 'Nuevo Empleado'}
           </button>
         </div>
       </div>
@@ -121,8 +203,10 @@ export default function EmployeeManagement() {
 
       {showForm && (
         <div className="card mb-8">
-          <h2 className="text-xl font-bold text-gray-900 mb-6">Crear Nuevo Empleado</h2>
-          <form onSubmit={createEmployee} className="space-y-6">
+          <h2 className="text-xl font-bold text-gray-900 mb-6">
+            {editingEmployee ? 'Editar Empleado' : 'Crear Nuevo Empleado'}
+          </h2>
+          <form onSubmit={handleSubmit} className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Nombre</label>
@@ -155,23 +239,50 @@ export default function EmployeeManagement() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Contraseña</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Teléfono</label>
                 <input
-                  type="password"
-                  value={formData.password}
-                  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                  type="tel"
+                  value={formData.phone}
+                  onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                   className="input-field"
-                  required
-                  minLength="8"
+                  placeholder="+51 999 999 999"
                 />
+              </div>
+              {!editingEmployee && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Contraseña</label>
+                  <input
+                    type="password"
+                    value={formData.password}
+                    onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                    className="input-field"
+                    required={!editingEmployee}
+                    minLength="8"
+                  />
+                </div>
+              )}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Departamento</label>
+                <select
+                  value={formData.department_id}
+                  onChange={(e) => setFormData({ ...formData, department_id: e.target.value })}
+                  className="input-field"
+                >
+                  <option value="">Sin asignar</option>
+                  {departments.map((dept) => (
+                    <option key={dept.id} value={dept.id}>
+                      {dept.name}
+                    </option>
+                  ))}
+                </select>
               </div>
             </div>
             <div className="flex justify-end space-x-4">
-              <button type="button" onClick={() => setShowForm(false)} className="btn-secondary">
+              <button type="button" onClick={resetForm} className="btn-secondary">
                 Cancelar
               </button>
               <button type="submit" className="btn-primary">
-                Crear Empleado
+                {editingEmployee ? 'Actualizar Empleado' : 'Crear Empleado'}
               </button>
             </div>
           </form>
@@ -193,7 +304,10 @@ export default function EmployeeManagement() {
                   Email
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Fecha de Registro
+                  Teléfono
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Departamento
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Acciones
@@ -203,7 +317,7 @@ export default function EmployeeManagement() {
             <tbody className="bg-white divide-y divide-gray-200">
               {employees.length === 0 ? (
                 <tr>
-                  <td colSpan="4" className="px-6 py-4 text-center text-gray-500">
+                  <td colSpan="5" className="px-6 py-4 text-center text-gray-500">
                     No hay empleados registrados
                   </td>
                 </tr>
@@ -219,11 +333,29 @@ export default function EmployeeManagement() {
                       <div className="text-sm text-gray-500">{employee.email}</div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-500">
-                        {new Date(employee.created_at).toLocaleDateString('es-PE')}
-                      </div>
+                      <div className="text-sm text-gray-500">{employee.phone || '-'}</div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <select
+                        value={employee.department_id || ''}
+                        onChange={(e) => assignDepartment(employee.id, e.target.value)}
+                        className="text-sm border border-gray-300 rounded px-2 py-1"
+                      >
+                        <option value="">Sin asignar</option>
+                        {departments.map((dept) => (
+                          <option key={dept.id} value={dept.id}>
+                            {dept.name}
+                          </option>
+                        ))}
+                      </select>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-3">
+                      <button
+                        onClick={() => handleEdit(employee)}
+                        className="text-blue-600 hover:text-blue-900"
+                      >
+                        <Edit className="h-4 w-4" />
+                      </button>
                       <button
                         onClick={() => deleteEmployee(employee.id)}
                         className="text-red-600 hover:text-red-900"

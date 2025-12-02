@@ -17,6 +17,7 @@ import Profile from './pages/Profile';
 import UserManagement from './pages/admin/UserManagement';
 import EmployeeManagement from './pages/admin/EmployeeManagement';
 import AdminStats from './pages/admin/AdminStats';
+import Departments from './pages/admin/Departments';
 
 // Staff Pages
 import AllPolicies from './pages/staff/AllPolicies';
@@ -127,6 +128,17 @@ function App() {
               <ProtectedRoute>
                 <Layout>
                   <AdminStats />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/admin/departments"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <Departments />
                 </Layout>
               </ProtectedRoute>
             }

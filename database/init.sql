@@ -7,6 +7,26 @@
 DROP TABLE IF EXISTS policies CASCADE;
 DROP TABLE IF EXISTS insurance_types CASCADE;
 DROP TABLE IF EXISTS users CASCADE;
+DROP TABLE IF EXISTS departments CASCADE;
+
+-- ===============================================
+-- DEPARTMENTS TABLE
+-- ===============================================
+CREATE TABLE departments (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(100) UNIQUE NOT NULL,
+    description TEXT,
+    is_active BOOLEAN DEFAULT true,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Seed default departments
+INSERT INTO departments (name, description) VALUES
+('Ventas', 'Departamento de ventas y atención al cliente'),
+('Suscripciones', 'Departamento de gestión de pólizas y suscripciones'),
+('Reclamos', 'Departamento de procesamiento de reclamos'),
+('Auditoría', 'Departamento de auditoría y control de calidad');
 
 -- ===============================================
 -- USERS TABLE
@@ -18,6 +38,8 @@ CREATE TABLE users (
     first_name VARCHAR(100) NOT NULL,
     last_name VARCHAR(100) NOT NULL,
     role VARCHAR(20) DEFAULT 'customer' CHECK (role IN ('customer', 'employee', 'admin')),
+    department_id INTEGER REFERENCES departments(id) ON DELETE SET NULL,
+    phone VARCHAR(20),
     is_active BOOLEAN DEFAULT true,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
@@ -25,6 +47,7 @@ CREATE TABLE users (
 
 -- Index for faster email lookups
 CREATE INDEX idx_users_email ON users(email);
+CREATE INDEX idx_users_department ON users(department_id);
 
 -- ===============================================
 -- INSURANCE TYPES TABLE
@@ -139,6 +162,9 @@ CREATE TRIGGER update_policies_updated_at BEFORE UPDATE ON policies
 FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
 CREATE TRIGGER update_claims_updated_at BEFORE UPDATE ON policy_claims
+FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+CREATE TRIGGER update_departments_updated_at BEFORE UPDATE ON departments
 FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
 -- ===============================================

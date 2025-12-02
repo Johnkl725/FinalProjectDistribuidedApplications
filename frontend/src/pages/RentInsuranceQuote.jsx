@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Building, DollarSign, AlertCircle, CheckCircle } from 'lucide-react';
 import { rentInsuranceAPI } from '../services/api';
+import { formatCurrency, coverageOptions } from '../utils/currency';
 
 export default function RentInsuranceQuote() {
   const navigate = useNavigate();
@@ -137,10 +138,9 @@ export default function RentInsuranceQuote() {
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Cobertura</label>
                 <select name="coverage_amount" value={formData.coverage_amount} onChange={handleChange} className="input-field" required>
-                  <option value="20000">$20,000</option>
-                  <option value="30000">$30,000</option>
-                  <option value="50000">$50,000</option>
-                  <option value="75000">$75,000</option>
+                  {coverageOptions.rent.map(option => (
+                    <option key={option.value} value={option.value}>{option.label}</option>
+                  ))}
                 </select>
               </div>
 
@@ -166,9 +166,9 @@ export default function RentInsuranceQuote() {
           <div className="bg-gradient-to-r from-primary-50 to-primary-100 rounded-xl p-8 mb-8 text-center">
             <p className="text-sm text-gray-600 mb-2">Prima Anual</p>
             <p className="text-5xl font-bold text-primary-600">
-              ${quote.premium ? quote.premium.toLocaleString('es-PE', { minimumFractionDigits: 2 }) : 'Consultar'}
+              {quote.premium ? formatCurrency(quote.premium) : 'Consultar'}
             </p>
-            <p className="text-sm text-gray-600 mt-2">Cobertura de ${parseInt(formData.coverage_amount).toLocaleString('es-PE')}</p>
+            <p className="text-sm text-gray-600 mt-2">Cobertura de {formatCurrency(formData.coverage_amount)}</p>
           </div>
 
           <div className="flex justify-between">

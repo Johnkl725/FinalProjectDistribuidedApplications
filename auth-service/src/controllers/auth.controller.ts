@@ -4,13 +4,19 @@
 
 import { Request, Response } from 'express';
 import { AuthService } from '../services/auth.service';
+import { DepartmentRepository } from '../repositories/department.repository';
+import { UserRepository } from '../repositories/user.repository';
 import { successResponse, errorResponse, HTTP_STATUS } from 'shared';
 
 export class AuthController {
   private authService: AuthService;
+  private departmentRepo: DepartmentRepository;
+  private userRepo: UserRepository;
 
   constructor() {
     this.authService = new AuthService();
+    this.departmentRepo = new DepartmentRepository();
+    this.userRepo = new UserRepository();
   }
 
   /**
@@ -203,7 +209,7 @@ export class AuthController {
    */
   createEmployee = async (req: Request, res: Response): Promise<void> => {
     try {
-      const { email, password, first_name, last_name, firstName, lastName } = req.body;
+      const { email, password, first_name, last_name, firstName, lastName, department_id, phone } = req.body;
 
       const finalFirstName = first_name || firstName;
       const finalLastName = last_name || lastName;
@@ -221,10 +227,129 @@ export class AuthController {
         first_name: finalFirstName,
         last_name: finalLastName,
         role: 'employee',
+        department_id: department_id || null,
+        phone: phone || null,
       });
 
       res.status(HTTP_STATUS.CREATED).json(
         successResponse(result, 'Employee created successfully')
+      );
+    } catch (error: any) {
+      res.status(HTTP_STATUS.BAD_REQUEST).json(
+        errorResponse(error.message)
+      );
+    }
+  };
+
+  /**
+   * Update employee (admin only)
+   * PUT /auth/employees/:id
+   */
+  updateEmployee = async (req: Request, res: Response): Promise<void> => {
+    try {
+      const userId = parseInt(req.params.id);
+      const { first_name, last_name, email, department_id, phone } = req.body;
+
+      const updates: any = {};
+      if (first_name) updates.first_name = first_name;
+      if (last_name) updates.last_name = last_name;
+      if (email) updates.email = email;
+      if (department_id !== undefined) updates.department_id = department_id;
+      if (phone !== undefined) updates.phone = phone;
+
+      const user = await this.userRepo.updateUser(userId, updates);
+
+      if (!user) {
+        res.status(HTTP_STATUS.NOT_FOUND).json(
+          errorResponse('Employee not found')
+        );
+        return;
+      }
+
+      res.status(HTTP_STATUS.OK).json(
+        successResponse(user, 'Employee updated successfully')
+      );
+    } catch (error: any) {
+      res.status(HTTP_STATUS.BAD_REQUEST).json(
+        errorResponse(error.message)
+      );
+    }
+  };
+
+  /**
+   * Get all employees with department info (admin only)
+   * GET /auth/employees
+   */
+  getEmployees = async (req: Request, res: Response): Promise<void> => {
+    try {
+      const employees = await this.userRepo.getEmployeesWithDepartment();
+
+      res.status(HTTP_STATUS.OK).json(
+        successResponse(employees)
+      );
+    } catch (error: any) {
+      res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json(
+        errorResponse(error.message)
+      );
+    }
+  };
+
+  /**
+   * Get all departments (admin/employee)
+   * GET /auth/departments
+   */
+  getDepartments = async (req: Request, res: Response): Promise<void> => {
+    try {
+      const departments = await this.departmentRepo.getAllActiveDepartments();
+
+      res.status(HTTP_STATUS.OK).json(
+        successResponse(departments)
+      );
+    } catch (error: any) {
+      res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json(
+        errorResponse(error.message)
+      );
+    }
+  };
+
+  /**
+   * Get department statistics (admin only)
+   * GET /auth/departments/stats
+   */
+  getDepartmentStats = async (req: Request, res: Response): Promise<void> => {
+    try {
+      const stats = await this.departmentRepo.getEmployeeCountByDepartment();
+
+      res.status(HTTP_STATUS.OK).json(
+        successResponse(stats)
+      );
+    } catch (error: any) {
+      res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json(
+        errorResponse(error.message)
+      );
+    }
+  };
+
+  /**
+   * Assign employee to department (admin only)
+   * PUT /auth/employees/:id/department
+   */
+  assignEmployeeToDepartment = async (req: Request, res: Response): Promise<void> => {
+    try {
+      const userId = parseInt(req.params.id);
+      const { department_id } = req.body;
+
+      const user = await this.userRepo.updateUser(userId, { department_id });
+
+      if (!user) {
+        res.status(HTTP_STATUS.NOT_FOUND).json(
+          errorResponse('Employee not found')
+        );
+        return;
+      }
+
+      res.status(HTTP_STATUS.OK).json(
+        successResponse(user, 'Employee assigned to department successfully')
       );
     } catch (error: any) {
       res.status(HTTP_STATUS.BAD_REQUEST).json(

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Clock, CheckCircle, AlertCircle } from 'lucide-react';
 import axios from 'axios';
+import { formatCurrency } from '../../utils/currency';
 
 export default function PendingPolicies() {
   const [policies, setPolicies] = useState([]);
@@ -141,10 +142,10 @@ export default function PendingPolicies() {
                       {policy.type}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      ${policy.premium_amount?.toLocaleString('es-PE')}
+                      {formatCurrency(policy.premium_amount)}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      ${policy.coverage_amount?.toLocaleString('es-PE')}
+                      {formatCurrency(policy.coverage_amount)}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                       {new Date(policy.created_at).toLocaleDateString('es-PE')}

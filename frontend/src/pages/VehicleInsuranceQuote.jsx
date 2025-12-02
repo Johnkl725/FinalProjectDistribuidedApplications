@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Car, DollarSign, Calendar, AlertCircle, CheckCircle } from 'lucide-react';
 import { vehicleInsuranceAPI } from '../services/api';
+import { formatCurrency, coverageOptions } from '../utils/currency';
 
 export default function VehicleInsuranceQuote() {
   const navigate = useNavigate();
@@ -135,10 +136,9 @@ export default function VehicleInsuranceQuote() {
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Cobertura</label>
                 <select name="coverage_amount" value={formData.coverage_amount} onChange={handleChange} className="input-field" required>
-                  <option value="25000">$25,000</option>
-                  <option value="50000">$50,000</option>
-                  <option value="75000">$75,000</option>
-                  <option value="100000">$100,000</option>
+                  {coverageOptions.vehicle.map(option => (
+                    <option key={option.value} value={option.value}>{option.label}</option>
+                  ))}
                 </select>
               </div>
 
@@ -163,8 +163,8 @@ export default function VehicleInsuranceQuote() {
           <h2 className="text-2xl font-bold text-gray-900 mb-6">Tu Cotización</h2>
           <div className="bg-gradient-to-r from-primary-50 to-primary-100 rounded-xl p-8 mb-8 text-center">
             <p className="text-sm text-gray-600 mb-2">Prima Anual</p>
-            <p className="text-5xl font-bold text-primary-600">${quote.premium.toLocaleString('es-PE', { minimumFractionDigits: 2 })}</p>
-            <p className="text-sm text-gray-600 mt-2">Cobertura de ${parseInt(formData.coverage_amount).toLocaleString('es-PE')}</p>
+            <p className="text-5xl font-bold text-primary-600">{formatCurrency(quote.premium)}</p>
+            <p className="text-sm text-gray-600 mt-2">Cobertura de {formatCurrency(formData.coverage_amount)}</p>
           </div>
 
           <div className="bg-gray-50 rounded-lg p-6 mb-6">

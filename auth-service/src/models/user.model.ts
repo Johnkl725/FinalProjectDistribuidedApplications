@@ -9,6 +9,8 @@ export interface User {
   first_name: string;
   last_name: string;
   role: 'customer' | 'employee' | 'admin';
+  department_id?: number | null;
+  phone?: string | null;
   is_active?: boolean;
   created_at?: Date;
   updated_at?: Date;
@@ -20,6 +22,17 @@ export interface UserRegistration {
   first_name: string;
   last_name: string;
   role?: 'customer' | 'employee' | 'admin';
+  department_id?: number | null;
+  phone?: string | null;
+}
+
+export interface Department {
+  id?: number;
+  name: string;
+  description?: string;
+  is_active?: boolean;
+  created_at?: Date;
+  updated_at?: Date;
 }
 
 export interface UserLogin {
