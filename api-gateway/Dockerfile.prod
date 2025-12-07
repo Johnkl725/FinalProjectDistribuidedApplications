@@ -1,5 +1,5 @@
 # ===============================================
-# DOCKERFILE - AUTH SERVICE (Production)
+# DOCKERFILE - API GATEWAY (Production)
 # Multi-stage build for optimized image size
 # ===============================================
 
@@ -18,7 +18,7 @@ FROM node:20-alpine AS builder
 WORKDIR /app
 
 # Copy package files
-COPY auth-service/package*.json ./
+COPY api-gateway/package*.json ./
 
 # Install ALL dependencies (including devDependencies for build)
 RUN npm ci
@@ -27,7 +27,7 @@ RUN npm ci
 COPY --from=shared-builder /shared /app/node_modules/shared
 
 # Copy source code
-COPY auth-service/ ./
+COPY api-gateway/ ./
 
 # Build TypeScript
 RUN npm run build
@@ -38,7 +38,7 @@ FROM node:20-alpine
 WORKDIR /app
 
 # Copy package files
-COPY auth-service/package*.json ./
+COPY api-gateway/package*.json ./
 
 # Install ONLY production dependencies
 RUN npm ci --only=production && npm cache clean --force
@@ -56,11 +56,11 @@ RUN addgroup -g 1001 -S nodejs && \
 
 USER nodejs
 
-EXPOSE 3001
+EXPOSE 3000
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=3s --start-period=40s \
-  CMD node -e "require('http').get('http://localhost:3001/auth/health', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})"
+  CMD node -e "require('http').get('http://localhost:3000/health', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})"
 
 # Production command
 CMD ["node", "dist/index.js"]

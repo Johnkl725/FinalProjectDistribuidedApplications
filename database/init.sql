@@ -172,10 +172,10 @@ FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 -- ===============================================
 -- Password for all demo users: "Password123!" (hashed with bcrypt)
 INSERT INTO users (email, password_hash, first_name, last_name, role) VALUES
-('admin@insurance.com', '$2b$10$X7QZ1YQZ1YQZ1YQZ1YQZ1Oe8Z1YQZ1YQZ1YQZ1YQZ1YQZ1YQZ1YQZ1Y', 'Admin', 'User', 'admin'),
-('employee@insurance.com', '$2b$10$X7QZ1YQZ1YQZ1YQZ1YQZ1Oe8Z1YQZ1YQZ1YQZ1YQZ1YQZ1YQZ1YQZ1Y', 'Employee', 'User', 'employee'),
-('john.doe@email.com', '$2b$10$X7QZ1YQZ1YQZ1YQZ1YQZ1Oe8Z1YQZ1YQZ1YQZ1YQZ1YQZ1YQZ1YQZ1Y', 'John', 'Doe', 'customer'),
-('jane.smith@email.com', '$2b$10$X7QZ1YQZ1YQZ1YQZ1YQZ1Oe8Z1YQZ1YQZ1YQZ1YQZ1YQZ1YQZ1YQZ1Y', 'Jane', 'Smith', 'customer');
+('admin@insurance.com', '$2b$10$/be5.8oYPnJfjwZEePYF4uAdhPPW.emkCX0o3zQYpLHxSheWlpFTa', 'Admin', 'User', 'admin'),
+('employee@insurance.com', '$2b$10$/be5.8oYPnJfjwZEePYF4uAdhPPW.emkCX0o3zQYpLHxSheWlpFTa', 'Employee', 'User', 'employee'),
+('john.doe@email.com', '$2b$10$/be5.8oYPnJfjwZEePYF4uAdhPPW.emkCX0o3zQYpLHxSheWlpFTa', 'John', 'Doe', 'customer'),
+('jane.smith@email.com', '$2b$10$/be5.8oYPnJfjwZEePYF4uAdhPPW.emkCX0o3zQYpLHxSheWlpFTa', 'Jane', 'Smith', 'customer');
 
 -- ===============================================
 -- VIEWS FOR REPORTING

@@ -1,30 +1,66 @@
 # ===============================================
 # DOCKERFILE - VEHICLE INSURANCE SERVICE (Production)
-# Multi-stage build for optimized image
+# Multi-stage build for optimized image size
 # ===============================================
 
-# Stage 1: Build
+# Stage 1: Build shared module
+FROM node:20-alpine AS shared-builder
+
+WORKDIR /shared
+COPY shared/package*.json ./
+RUN npm ci
+COPY shared/ ./
+RUN npm run build
+
+# Stage 2: Build service
 FROM node:20-alpine AS builder
 
 WORKDIR /app
 
-COPY package*.json ./
-RUN npm ci --only=production
+# Copy package files
+COPY vehicle-insurance-service/package*.json ./
 
-COPY . .
+# Install ALL dependencies (including devDependencies for build)
+RUN npm ci
+
+# Copy shared module from previous stage
+COPY --from=shared-builder /shared /app/node_modules/shared
+
+# Copy source code
+COPY vehicle-insurance-service/ ./
+
+# Build TypeScript
 RUN npm run build
 
-# Stage 2: Production
+# Stage 3: Production
 FROM node:20-alpine
 
 WORKDIR /app
 
+# Copy package files
+COPY vehicle-insurance-service/package*.json ./
+
+# Install ONLY production dependencies
+RUN npm ci --only=production && npm cache clean --force
+
+# Copy built application from builder
 COPY --from=builder /app/dist ./dist
-COPY --from=builder /app/node_modules ./node_modules
-COPY --from=builder /app/package*.json ./
+
+# Copy shared module built version
+COPY --from=shared-builder /shared/dist ./node_modules/shared/dist
+COPY --from=shared-builder /shared/package.json ./node_modules/shared/
+
+# Create non-root user for security
+RUN addgroup -g 1001 -S nodejs && \
+    adduser -S nodejs -u 1001
+
+USER nodejs
 
 EXPOSE 3004
 
-USER node
+# Health check
+HEALTHCHECK --interval=30s --timeout=3s --start-period=40s \
+  CMD node -e "require('http').get('http://localhost:3004/vehicle-insurance/health', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})"
 
-CMD ["npm", "start"]
+# Production command
+CMD ["node", "dist/index.js"]
