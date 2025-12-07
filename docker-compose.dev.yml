@@ -1,6 +1,6 @@
 # ===============================================
-# DOCKER COMPOSE - PRODUCTION ENVIRONMENT
-# Optimized with multi-stage builds
+# DOCKER COMPOSE - DEVELOPMENT ENVIRONMENT
+# Hot-reloading enabled with volumes
 # ===============================================
 
 version: '3.8'
@@ -11,23 +11,22 @@ services:
   # ===============================================
   postgres:
     image: postgres:16-alpine
-    container_name: insurance-postgres-prod
+    container_name: insurance-postgres-dev
     environment:
-      POSTGRES_USER: ${DB_USER:-postgres}
-      POSTGRES_PASSWORD: ${DB_PASSWORD}
-      POSTGRES_DB: ${DB_NAME:-insurance_db}
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: insurance_db
     ports:
       - "5432:5432"
     volumes:
       - postgres-data:/var/lib/postgresql/data
-      - ../database/init.sql:/docker-entrypoint-initdb.d/init.sql
+      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql
     networks:
       - insurance-network
-    restart: always
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
-      interval: 30s
-      timeout: 10s
+      interval: 10s
+      timeout: 5s
       retries: 5
 
   # ===============================================
@@ -35,146 +34,149 @@ services:
   # ===============================================
   auth-service:
     build:
-      context: ../auth-service
-      dockerfile: Dockerfile.prod
-    container_name: insurance-auth-prod
+      context: .
+      dockerfile: auth-service/Dockerfile.dev
+    container_name: insurance-auth-dev
     ports:
       - "3001:3001"
     environment:
       - PORT=3001
-      - NODE_ENV=production
+      - NODE_ENV=development
       - DB_HOST=postgres
       - DB_PORT=5432
-      - DB_NAME=${DB_NAME:-insurance_db}
-      - DB_USER=${DB_USER:-postgres}
-      - DB_PASSWORD=${DB_PASSWORD}
-      - JWT_SECRET=${JWT_SECRET}
-      - JWT_EXPIRES_IN=${JWT_EXPIRES_IN:-24h}
+      - DB_NAME=insurance_db
+      - DB_USER=postgres
+      - DB_PASSWORD=postgres
+      - JWT_SECRET=dev-secret-key-change-in-production
+      - JWT_EXPIRES_IN=24h
+    volumes:
+      - ./auth-service:/app
+      - ./shared:/app/shared
+      - /app/node_modules
     depends_on:
       postgres:
         condition: service_healthy
     networks:
       - insurance-network
-    restart: always
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "10m"
-        max-file: "3"
+    restart: unless-stopped
 
   # ===============================================
   # Life Insurance Service
   # ===============================================
   life-insurance-service:
     build:
-      context: ../life-insurance-service
-      dockerfile: Dockerfile.prod
-    container_name: insurance-life-prod
+      context: .
+      dockerfile: life-insurance-service/Dockerfile.dev
+    container_name: insurance-life-dev
     ports:
       - "3002:3002"
     environment:
       - PORT=3002
-      - NODE_ENV=production
+      - NODE_ENV=development
       - DB_HOST=postgres
       - DB_PORT=5432
-      - DB_NAME=${DB_NAME:-insurance_db}
-      - DB_USER=${DB_USER:-postgres}
-      - DB_PASSWORD=${DB_PASSWORD}
-      - JWT_SECRET=${JWT_SECRET}
+      - DB_NAME=insurance_db
+      - DB_USER=postgres
+      - DB_PASSWORD=postgres
+      - JWT_SECRET=dev-secret-key-change-in-production
+      - AUTH_SERVICE_URL=http://auth-service:3001
+    volumes:
+      - ./life-insurance-service:/app
+      - ./shared:/app/shared
+      - /app/node_modules
     depends_on:
       postgres:
         condition: service_healthy
     networks:
       - insurance-network
-    restart: always
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "10m"
-        max-file: "3"
+    restart: unless-stopped
 
   # ===============================================
   # Rent Insurance Service
   # ===============================================
   rent-insurance-service:
     build:
-      context: ../rent-insurance-service
-      dockerfile: Dockerfile.prod
-    container_name: insurance-rent-prod
+      context: .
+      dockerfile: rent-insurance-service/Dockerfile.dev
+    container_name: insurance-rent-dev
     ports:
       - "3003:3003"
     environment:
       - PORT=3003
-      - NODE_ENV=production
+      - NODE_ENV=development
       - DB_HOST=postgres
       - DB_PORT=5432
-      - DB_NAME=${DB_NAME:-insurance_db}
-      - DB_USER=${DB_USER:-postgres}
-      - DB_PASSWORD=${DB_PASSWORD}
-      - JWT_SECRET=${JWT_SECRET}
+      - DB_NAME=insurance_db
+      - DB_USER=postgres
+      - DB_PASSWORD=postgres
+      - JWT_SECRET=dev-secret-key-change-in-production
+      - AUTH_SERVICE_URL=http://auth-service:3001
+    volumes:
+      - ./rent-insurance-service:/app
+      - ./shared:/app/shared
+      - /app/node_modules
     depends_on:
       postgres:
         condition: service_healthy
     networks:
       - insurance-network
-    restart: always
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "10m"
-        max-file: "3"
+    restart: unless-stopped
 
   # ===============================================
   # Vehicle Insurance Service
   # ===============================================
   vehicle-insurance-service:
     build:
-      context: ../vehicle-insurance-service
-      dockerfile: Dockerfile.prod
-    container_name: insurance-vehicle-prod
+      context: .
+      dockerfile: vehicle-insurance-service/Dockerfile.dev
+    container_name: insurance-vehicle-dev
     ports:
       - "3004:3004"
     environment:
       - PORT=3004
-      - NODE_ENV=production
+      - NODE_ENV=development
       - DB_HOST=postgres
       - DB_PORT=5432
-      - DB_NAME=${DB_NAME:-insurance_db}
-      - DB_USER=${DB_USER:-postgres}
-      - DB_PASSWORD=${DB_PASSWORD}
-      - JWT_SECRET=${JWT_SECRET}
+      - DB_NAME=insurance_db
+      - DB_USER=postgres
+      - DB_PASSWORD=postgres
+      - JWT_SECRET=dev-secret-key-change-in-production
+      - AUTH_SERVICE_URL=http://auth-service:3001
+    volumes:
+      - ./vehicle-insurance-service:/app
+      - ./shared:/app/shared
+      - /app/node_modules
     depends_on:
       postgres:
         condition: service_healthy
     networks:
       - insurance-network
-    restart: always
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "10m"
-        max-file: "3"
+    restart: unless-stopped
 
   # ===============================================
   # API Gateway
   # ===============================================
   api-gateway:
     build:
-      context: ../api-gateway
-      dockerfile: Dockerfile.prod
-    container_name: insurance-gateway-prod
+      context: .
+      dockerfile: api-gateway/Dockerfile.dev
+    container_name: insurance-gateway-dev
     ports:
       - "3000:3000"
     environment:
       - PORT=3000
-      - NODE_ENV=production
-      - JWT_SECRET=${JWT_SECRET}
+      - NODE_ENV=development
+      - JWT_SECRET=dev-secret-key-change-in-production
       - AUTH_SERVICE_URL=http://auth-service:3001
       - LIFE_SERVICE_URL=http://life-insurance-service:3002
       - RENT_SERVICE_URL=http://rent-insurance-service:3003
       - VEHICLE_SERVICE_URL=http://vehicle-insurance-service:3004
-      - RATE_LIMIT_WINDOW_MS=${RATE_LIMIT_WINDOW_MS:-900000}
-      - RATE_LIMIT_MAX_REQUESTS=${RATE_LIMIT_MAX_REQUESTS:-100}
+      - RATE_LIMIT_WINDOW_MS=900000
+      - RATE_LIMIT_MAX_REQUESTS=100
+    volumes:
+      - ./api-gateway:/app
+      - ./shared:/app/shared
+      - /app/node_modules
     depends_on:
       - auth-service
       - life-insurance-service
@@ -182,31 +184,26 @@ services:
       - vehicle-insurance-service
     networks:
       - insurance-network
-    restart: always
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "10m"
-        max-file: "3"
+    restart: unless-stopped
 
   # ===============================================
-  # Frontend (React + Vite with Nginx)
+  # Frontend (React + Vite)
   # ===============================================
-frontend:
-  build:
-    context: ../frontend
-    dockerfile: Dockerfile.dev
-  container_name: insurance-frontend-dev
-  ports:
-    - "5173:5173"
-  volumes:
-    - ../frontend:/app          # Tu código local para hot-reload
-    - /app/node_modules         # Volumen anónimo para módulos Linux
-  depends_on:
-    - api-gateway
-  networks:
-    - insurance-network
-  restart: unless-stopped
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.dev
+    container_name: insurance-frontend-dev
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./frontend:/app         # Código local
+      - /app/node_modules        # Volumen anónimo para módulos Linux
+    depends_on:
+      - api-gateway
+    networks:
+      - insurance-network
+    restart: unless-stopped
 
 # ===============================================
 # Networks
@@ -220,3 +217,4 @@ networks:
 # ===============================================
 volumes:
   postgres-data:
+  frontend-node-modules:
