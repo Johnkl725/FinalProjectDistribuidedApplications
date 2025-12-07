@@ -49,6 +49,7 @@ COPY --from=builder /app/dist ./dist
 # Copy shared module built version
 COPY --from=shared-builder /shared/dist ./node_modules/shared/dist
 COPY --from=shared-builder /shared/package.json ./node_modules/shared/
+COPY --from=shared-builder /shared/node_modules ./node_modules/shared/node_modules
 
 # Create non-root user for security
 RUN addgroup -g 1001 -S nodejs && \

@@ -1,58 +1,56 @@
 # ===============================================
 # DOCKER COMPOSE - PRODUCTION ENVIRONMENT
 # Optimized with multi-stage builds
+# Uses external cloud database (Render PostgreSQL)
 # ===============================================
 
 version: '3.8'
 
 services:
   # ===============================================
-  # PostgreSQL Database
+  # Database Initialization Service
+  # Runs init.sql only if tables don't exist
   # ===============================================
-  postgres:
+  db-init:
     image: postgres:16-alpine
-    container_name: insurance-postgres-prod
+    container_name: insurance-db-init
     environment:
-      POSTGRES_USER: ${DB_USER:-postgres}
-      POSTGRES_PASSWORD: ${DB_PASSWORD}
-      POSTGRES_DB: ${DB_NAME:-insurance_db}
-    ports:
-      - "5432:5432"
+      - DB_HOST=${DB_HOST}
+      - DB_PORT=${DB_PORT:-5432}
+      - DB_NAME=${DB_NAME}
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
     volumes:
-      - postgres-data:/var/lib/postgresql/data
-      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql
+      - ./database:/app/database
+      - ./scripts/init-db.sh:/app/init-db.sh
+    command: sh /app/init-db.sh
     networks:
       - insurance-network
-    restart: always
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
-      interval: 30s
-      timeout: 10s
-      retries: 5
+    restart: "no"  # Run once and exit
 
   # ===============================================
   # Auth Service
   # ===============================================
   auth-service:
     build:
-      context: ./auth-service
-      dockerfile: Dockerfile.prod
+      context: .
+      dockerfile: auth-service/Dockerfile.prod
     container_name: insurance-auth-prod
     ports:
       - "3001:3001"
     environment:
       - PORT=3001
       - NODE_ENV=production
-      - DB_HOST=postgres
-      - DB_PORT=5432
-      - DB_NAME=${DB_NAME:-insurance_db}
-      - DB_USER=${DB_USER:-postgres}
+      - DB_HOST=${DB_HOST}
+      - DB_PORT=${DB_PORT:-5432}
+      - DB_NAME=${DB_NAME}
+      - DB_USER=${DB_USER}
       - DB_PASSWORD=${DB_PASSWORD}
       - JWT_SECRET=${JWT_SECRET}
       - JWT_EXPIRES_IN=${JWT_EXPIRES_IN:-24h}
     depends_on:
-      postgres:
-        condition: service_healthy
+      db-init:
+        condition: service_completed_successfully
     networks:
       - insurance-network
     restart: always
@@ -67,23 +65,23 @@ services:
   # ===============================================
   life-insurance-service:
     build:
-      context: ./life-insurance-service
-      dockerfile: Dockerfile.prod
+      context: .
+      dockerfile: life-insurance-service/Dockerfile.prod
     container_name: insurance-life-prod
     ports:
       - "3002:3002"
     environment:
       - PORT=3002
       - NODE_ENV=production
-      - DB_HOST=postgres
-      - DB_PORT=5432
-      - DB_NAME=${DB_NAME:-insurance_db}
-      - DB_USER=${DB_USER:-postgres}
+      - DB_HOST=${DB_HOST}
+      - DB_PORT=${DB_PORT:-5432}
+      - DB_NAME=${DB_NAME}
+      - DB_USER=${DB_USER}
       - DB_PASSWORD=${DB_PASSWORD}
       - JWT_SECRET=${JWT_SECRET}
     depends_on:
-      postgres:
-        condition: service_healthy
+      db-init:
+        condition: service_completed_successfully
     networks:
       - insurance-network
     restart: always
@@ -98,23 +96,23 @@ services:
   # ===============================================
   rent-insurance-service:
     build:
-      context: ./rent-insurance-service
-      dockerfile: Dockerfile.prod
+      context: .
+      dockerfile: rent-insurance-service/Dockerfile.prod
     container_name: insurance-rent-prod
     ports:
       - "3003:3003"
     environment:
       - PORT=3003
       - NODE_ENV=production
-      - DB_HOST=postgres
-      - DB_PORT=5432
-      - DB_NAME=${DB_NAME:-insurance_db}
-      - DB_USER=${DB_USER:-postgres}
+      - DB_HOST=${DB_HOST}
+      - DB_PORT=${DB_PORT:-5432}
+      - DB_NAME=${DB_NAME}
+      - DB_USER=${DB_USER}
       - DB_PASSWORD=${DB_PASSWORD}
       - JWT_SECRET=${JWT_SECRET}
     depends_on:
-      postgres:
-        condition: service_healthy
+      db-init:
+        condition: service_completed_successfully
     networks:
       - insurance-network
     restart: always
@@ -129,23 +127,23 @@ services:
   # ===============================================
   vehicle-insurance-service:
     build:
-      context: ./vehicle-insurance-service
-      dockerfile: Dockerfile.prod
+      context: .
+      dockerfile: vehicle-insurance-service/Dockerfile.prod
     container_name: insurance-vehicle-prod
     ports:
       - "3004:3004"
     environment:
       - PORT=3004
       - NODE_ENV=production
-      - DB_HOST=postgres
-      - DB_PORT=5432
-      - DB_NAME=${DB_NAME:-insurance_db}
-      - DB_USER=${DB_USER:-postgres}
+      - DB_HOST=${DB_HOST}
+      - DB_PORT=${DB_PORT:-5432}
+      - DB_NAME=${DB_NAME}
+      - DB_USER=${DB_USER}
       - DB_PASSWORD=${DB_PASSWORD}
       - JWT_SECRET=${JWT_SECRET}
     depends_on:
-      postgres:
-        condition: service_healthy
+      db-init:
+        condition: service_completed_successfully
     networks:
       - insurance-network
     restart: always
@@ -160,8 +158,8 @@ services:
   # ===============================================
   api-gateway:
     build:
-      context: ./api-gateway
-      dockerfile: Dockerfile.prod
+      context: .
+      dockerfile: api-gateway/Dockerfile.prod
     container_name: insurance-gateway-prod
     ports:
       - "3000:3000"
@@ -221,6 +219,5 @@ networks:
 
 # ===============================================
 # Volumes
+# NOTE: No postgres-data volume needed - using external cloud database
 # ===============================================
-volumes:
-  postgres-data:

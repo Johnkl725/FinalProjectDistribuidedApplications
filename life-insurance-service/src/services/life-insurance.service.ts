@@ -32,7 +32,7 @@ export class LifeInsuranceService {
       userId: data.user_id,
       coverageAmount: data.coverage_amount,
       startDate: new Date(data.start_date),
-      endDate: new Date(data.end_date),
+      endDate: data.end_date ? new Date(data.end_date) : undefined,
       age: data.age,
       medicalHistory: data.medical_history,
       smoker: data.smoker,

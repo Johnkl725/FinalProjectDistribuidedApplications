@@ -25,7 +25,7 @@ export class RentInsuranceService {
       userId: data.user_id,
       coverageAmount: data.coverage_amount,
       startDate: new Date(data.start_date),
-      endDate: new Date(data.end_date),
+      endDate: data.end_date ? new Date(data.end_date) : undefined,
       address: data.address,
       propertyValue: data.property_value,
       usageType: data.usage_type,
