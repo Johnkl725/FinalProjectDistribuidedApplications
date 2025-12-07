@@ -11,6 +11,7 @@ import LifeInsuranceQuote from './pages/LifeInsuranceQuote';
 import VehicleInsuranceQuote from './pages/VehicleInsuranceQuote';
 import RentInsuranceQuote from './pages/RentInsuranceQuote';
 import MyPolicies from './pages/MyPolicies';
+import MyClaims from './pages/MyClaims';
 import Profile from './pages/Profile';
 
 // Admin Pages
@@ -22,6 +23,10 @@ import Departments from './pages/admin/Departments';
 // Staff Pages
 import AllPolicies from './pages/staff/AllPolicies';
 import PendingPolicies from './pages/staff/PendingPolicies';
+import ClaimsManagement from './pages/staff/ClaimsManagement';
+
+// Other Pages
+import CreateClaim from './pages/CreateClaim';
 
 function App() {
   return (
@@ -83,6 +88,28 @@ function App() {
               <ProtectedRoute>
                 <Layout>
                   <MyPolicies />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/claims"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <MyClaims />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/claims/create"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <CreateClaim />
                 </Layout>
               </ProtectedRoute>
             }
@@ -162,6 +189,17 @@ function App() {
               <ProtectedRoute>
                 <Layout>
                   <PendingPolicies />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/staff/claims"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <ClaimsManagement />
                 </Layout>
               </ProtectedRoute>
             }

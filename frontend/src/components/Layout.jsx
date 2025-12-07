@@ -15,7 +15,8 @@ import {
   Building,
   Users,
   BarChart3,
-  Clock
+  Clock,
+  AlertCircle
 } from 'lucide-react';
 
 export default function Layout({ children }) {
@@ -45,7 +46,8 @@ export default function Layout({ children }) {
           { name: 'Seguro de Renta', href: '/quotes/rent', icon: Building },
         ]
       },
-      { name: 'Mis Pólizas', href: '/policies', icon: FileText }
+      { name: 'Mis Pólizas', href: '/policies', icon: FileText },
+      { name: 'Mis Reclamos', href: '/claims', icon: AlertCircle }
     );
   }
 
@@ -53,7 +55,8 @@ export default function Layout({ children }) {
   if (isStaff) {
     navigation.push(
       { name: 'Todas las Pólizas', href: '/staff/policies', icon: FileText },
-      { name: 'Pólizas Pendientes', href: '/staff/pending-policies', icon: Clock }
+      { name: 'Pólizas Pendientes', href: '/staff/pending-policies', icon: Clock },
+      { name: 'Gestionar Reclamos', href: '/staff/claims', icon: AlertCircle }
     );
   }
 

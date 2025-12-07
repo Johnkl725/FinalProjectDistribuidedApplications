@@ -11,6 +11,7 @@ const AUTH_SERVICE_URL = process.env.AUTH_SERVICE_URL || 'http://localhost:3001'
 const LIFE_SERVICE_URL = process.env.LIFE_SERVICE_URL || 'http://localhost:3002';
 const RENT_SERVICE_URL = process.env.RENT_SERVICE_URL || 'http://localhost:3003';
 const VEHICLE_SERVICE_URL = process.env.VEHICLE_SERVICE_URL || 'http://localhost:3004';
+const CLAIMS_SERVICE_URL = process.env.CLAIMS_SERVICE_URL || 'http://localhost:3005';
 
 /**
  * Auth Service Proxy
@@ -61,6 +62,17 @@ export const vehicleServiceProxy = proxy(VEHICLE_SERVICE_URL, {
   proxyReqPathResolver: (req) => {
     const path = '/vehicle-insurance' + req.url;
     console.log(`🔄 Proxying to Vehicle Insurance Service: ${req.method} ${path}`);
+    return path;
+  },
+});
+
+/**
+ * Claims Service Proxy
+ */
+export const claimsServiceProxy = proxy(CLAIMS_SERVICE_URL, {
+  proxyReqPathResolver: (req) => {
+    const path = '/claims' + req.url;
+    console.log(`🔄 Proxying to Claims Service: ${req.method} ${path}`);
     return path;
   },
 });
