@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react';
-import { Heart, Car, Building, FileText, Calendar, DollarSign } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Heart, Car, Building, FileText, Calendar, DollarSign, AlertCircle } from 'lucide-react';
 import { lifeInsuranceAPI, vehicleInsuranceAPI, rentInsuranceAPI } from '../services/api';
 
 export default function MyPolicies() {
+  const navigate = useNavigate();
   const [policies, setPolicies] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('all');
@@ -158,6 +160,19 @@ export default function MyPolicies() {
                   </p>
                 </div>
               )}
+
+              {/* Action Buttons */}
+              <div className="mt-4 pt-4 border-t flex gap-2">
+                {policy.status === 'active' && (
+                  <button
+                    onClick={() => navigate(`/claims/create?policyId=${policy.id}`)}
+                    className="flex-1 px-4 py-2 text-sm font-medium text-primary-600 bg-primary-50 rounded-lg hover:bg-primary-100 flex items-center justify-center"
+                  >
+                    <AlertCircle className="h-4 w-4 mr-1" />
+                    Crear Reclamo
+                  </button>
+                )}
+              </div>
             </div>
           ))}
         </div>

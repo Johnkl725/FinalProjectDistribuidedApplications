@@ -15,6 +15,7 @@ import {
   lifeServiceProxy,
   rentServiceProxy,
   vehicleServiceProxy,
+  claimsServiceProxy,
 } from './config/proxy.config';
 
 dotenv.config();
@@ -68,6 +69,12 @@ app.get('/', express.json(), (req: Request, res: Response) => {
         createPolicy: 'POST /api/vehicle-insurance/policies',
         myPolicies: 'GET /api/vehicle-insurance/policies/my',
       },
+      claims: {
+        createClaim: 'POST /api/claims',
+        myClaims: 'GET /api/claims/my',
+        getClaim: 'GET /api/claims/:claimNumber',
+        updateStatus: 'PUT /api/claims/:id/status',
+      },
     },
     note: 'All endpoints (except /auth/register and /auth/login) require Bearer token authentication',
   });
@@ -109,6 +116,7 @@ app.use('/api/auth', authServiceProxy);
 app.use('/api/life-insurance', gatewayAuthMiddleware, lifeServiceProxy);
 app.use('/api/rent-insurance', gatewayAuthMiddleware, rentServiceProxy);
 app.use('/api/vehicle-insurance', gatewayAuthMiddleware, vehicleServiceProxy);
+app.use('/api/claims', gatewayAuthMiddleware, claimsServiceProxy);
 
 // ===============================================
 // ERROR HANDLERS
@@ -151,6 +159,8 @@ app.listen(PORT, () => {
   console.log(`   🏥 Life Insurance: ${process.env.LIFE_SERVICE_URL}`);
   console.log(`   🏠 Rent Insurance: ${process.env.RENT_SERVICE_URL}`);
   console.log(`   🚗 Vehicle Insurance: ${process.env.VEHICLE_SERVICE_URL}`);
+  console.log(`   📋 Claims Service: ${process.env.CLAIMS_SERVICE_URL}`);
+  console.log(`   📋 Claims Service: ${process.env.CLAIMS_SERVICE_URL}`);
   console.log('='.repeat(50));
 });
 

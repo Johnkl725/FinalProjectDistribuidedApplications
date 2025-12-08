@@ -83,4 +83,15 @@ export const rentInsuranceAPI = {
   activatePolicy: (id) => api.put(`/rent-insurance/policies/${id}/activate`),
 };
 
+// ========== CLAIMS API ==========
+export const claimsAPI = {
+  createClaim: (data) => api.post('/claims', data),
+  getMyClaims: () => api.get('/claims/my'),
+  getPolicyClaims: (policyId) => api.get(`/claims/policy/${policyId}`),
+  getClaimById: (id) => api.get(`/claims/id/${id}`),
+  getClaimByNumber: (claimNumber) => api.get(`/claims/${claimNumber}`),
+  getAllClaims: () => api.get('/claims'),
+  updateClaimStatus: (id, status) => api.put(`/claims/${id}/status`, { status }),
+};
+
 export default api;

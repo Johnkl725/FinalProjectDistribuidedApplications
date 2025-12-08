@@ -154,6 +154,37 @@ services:
     restart: unless-stopped
 
   # ===============================================
+  # Claims Service
+  # ===============================================
+  claims-service:
+    build:
+      context: .
+      dockerfile: claims-service/Dockerfile.dev
+    container_name: insurance-claims-dev
+    ports:
+      - "3005:3005"
+    environment:
+      - PORT=3005
+      - NODE_ENV=development
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_NAME=insurance_db
+      - DB_USER=postgres
+      - DB_PASSWORD=postgres
+      - JWT_SECRET=dev-secret-key-change-in-production
+      - AUTH_SERVICE_URL=http://auth-service:3001
+    volumes:
+      - ./claims-service:/app
+      - ./shared:/app/shared
+      - /app/node_modules
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - insurance-network
+    restart: unless-stopped
+
+  # ===============================================
   # API Gateway
   # ===============================================
   api-gateway:
@@ -183,6 +214,7 @@ services:
       - life-insurance-service
       - rent-insurance-service
       - vehicle-insurance-service
+      - claims-service
     networks:
       - insurance-network
     restart: unless-stopped
