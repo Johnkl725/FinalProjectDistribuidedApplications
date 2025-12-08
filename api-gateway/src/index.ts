@@ -29,7 +29,13 @@ app.use(helmet()); // Security headers
 app.use(cors()); // Enable CORS
 app.use(morgan('dev')); // HTTP request logger
 app.use(requestLogger); // Custom request logger
-app.use(rateLimiter()); // Rate limiting
+// Rate limiting: enabled only when RATE_LIMIT_ENABLED is 'true' (case-insensitive)
+const rateLimitEnabled = String(process.env.RATE_LIMIT_ENABLED ?? 'true').toLowerCase() === 'true';
+if (rateLimitEnabled) {
+  app.use(rateLimiter()); // Rate limiting
+} else {
+  console.log('Rate limiter disabled by RATE_LIMIT_ENABLED=false');
+}
 
 // ===============================================
 // API GATEWAY ROUTES
