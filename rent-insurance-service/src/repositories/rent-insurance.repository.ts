@@ -41,7 +41,7 @@ export class RentInsuranceRepository extends BaseRepository<RentInsurancePolicy>
       SELECT p.*, it.name as insurance_type_name
       FROM policies p
       JOIN insurance_types it ON p.insurance_type_id = it.id
-      WHERE p.user_id = $1 AND it.name = 'rent'
+      WHERE p.user_id = $1 AND it.name = 'rent' AND p.is_current = true
       ORDER BY p.created_at DESC
     `;
 
@@ -54,7 +54,7 @@ export class RentInsuranceRepository extends BaseRepository<RentInsurancePolicy>
       SELECT p.*, it.name as insurance_type_name
       FROM policies p
       JOIN insurance_types it ON p.insurance_type_id = it.id
-      WHERE p.id = $1 AND it.name = 'rent'
+      WHERE p.id = $1 AND it.name = 'rent' AND p.is_current = true
     `;
 
     const result = await this.executeQuery<RentInsurancePolicy>(query, [policyId]);
@@ -66,7 +66,7 @@ export class RentInsuranceRepository extends BaseRepository<RentInsurancePolicy>
       SELECT p.*, it.name as insurance_type_name
       FROM policies p
       JOIN insurance_types it ON p.insurance_type_id = it.id
-      WHERE p.policy_number = $1 AND it.name = 'rent'
+      WHERE p.policy_number = $1 AND it.name = 'rent' AND p.is_current = true
     `;
 
     const result = await this.executeQuery<RentInsurancePolicy>(query, [policyNumber]);
@@ -80,7 +80,7 @@ export class RentInsuranceRepository extends BaseRepository<RentInsurancePolicy>
       FROM policies p
       JOIN insurance_types it ON p.insurance_type_id = it.id
       JOIN users u ON p.user_id = u.id
-      WHERE it.name = 'rent'
+      WHERE it.name = 'rent' AND p.is_current = true
       ORDER BY p.created_at DESC
     `;
 

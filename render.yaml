@@ -55,6 +55,19 @@ services:
       - key: PORT
         value: 3004
 
+  # Claims Service
+  - type: web
+    name: insurance-claims-service
+    runtime: docker
+    dockerfilePath: ./claims-service/Dockerfile.prod
+    dockerContext: .
+    plan: free
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 3005
+
   # API Gateway
   - type: web
     name: insurance-api-gateway
@@ -75,6 +88,8 @@ services:
         value: https://insurance-rent-service.onrender.com
       - key: VEHICLE_SERVICE_URL
         value: https://insurance-vehicle-service.onrender.com
+      - key: CLAIMS_SERVICE_URL
+        value: https://insurance-claims-service.onrender.com
 
   # Frontend
   - type: web

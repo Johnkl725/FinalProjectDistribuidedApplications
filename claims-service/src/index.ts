@@ -26,6 +26,15 @@ app.use(morgan('dev'));
 // Routes
 app.use('/claims', claimRoutes);
 
+// Direct health check endpoint (without /claims prefix)
+app.get('/health', (req, res) => {
+  res.json({
+    status: 'healthy',
+    service: 'Claims Service',
+    timestamp: new Date().toISOString(),
+  });
+});
+
 // Root endpoint
 app.get('/', (req, res) => {
   res.json({

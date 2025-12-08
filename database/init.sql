@@ -85,6 +85,10 @@ CREATE TABLE policies (
     premium_amount DECIMAL(10, 2) NOT NULL,
     coverage_amount DECIMAL(12, 2) NOT NULL,
     
+    -- SCD Type 2 Fields
+    is_current BOOLEAN DEFAULT true,
+    effective_end_date TIMESTAMP DEFAULT NULL,
+    
     -- Life Insurance Specific (JSONB for flexibility)
     life_details JSONB DEFAULT NULL,
     -- Example structure:
@@ -125,6 +129,8 @@ CREATE INDEX idx_policies_user_id ON policies(user_id);
 CREATE INDEX idx_policies_insurance_type_id ON policies(insurance_type_id);
 CREATE INDEX idx_policies_status ON policies(status);
 CREATE INDEX idx_policies_policy_number ON policies(policy_number);
+CREATE INDEX idx_policies_is_current ON policies(is_current) WHERE is_current = true;
+CREATE INDEX idx_policies_user_current ON policies(user_id, is_current) WHERE is_current = true;
 
 -- ===============================================
 -- POLICY CLAIMS TABLE (Optional - for future)
@@ -141,8 +147,6 @@ CREATE TABLE policy_claims (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE INDEX idx_claims_policy_id ON policy_claims(policy_id);
-
 -- ===============================================
 -- FUNCTION: Auto-update updated_at timestamp
 -- ===============================================
@@ -150,6 +154,26 @@ CREATE OR REPLACE FUNCTION update_updated_at_column()
 RETURNS TRIGGER AS $$
 BEGIN
     NEW.updated_at = CURRENT_TIMESTAMP;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+-- ===============================================
+-- FUNCTION: Validar que end_date sea válida
+-- ===============================================
+CREATE OR REPLACE FUNCTION validate_policy_dates()
+RETURNS TRIGGER AS $$
+BEGIN
+    -- Validar que end_date sea después de start_date
+    IF NEW.end_date IS NOT NULL AND NEW.end_date < NEW.start_date THEN
+        RAISE EXCEPTION 'end_date (%) no puede ser anterior a start_date (%)', NEW.end_date, NEW.start_date;
+    END IF;
+    
+    -- Si status = 'cancelled', end_date debe estar seteada
+    IF NEW.status = 'cancelled' AND NEW.end_date IS NULL THEN
+        NEW.end_date = CURRENT_DATE;
+    END IF;
+    
     RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
@@ -167,19 +191,53 @@ FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 CREATE TRIGGER update_departments_updated_at BEFORE UPDATE ON departments
 FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
+-- Apply validation trigger for policies
+CREATE TRIGGER validate_policy_dates_trigger
+    BEFORE INSERT OR UPDATE ON policies
+    FOR EACH ROW 
+    EXECUTE FUNCTION validate_policy_dates();
+
 -- ===============================================
 -- SEED DATA (Demo Users)
 -- ===============================================
 -- Password for all demo users: "Password123!" (hashed with bcrypt)
-INSERT INTO users (email, password_hash, first_name, last_name, role) VALUES
-('admin@insurance.com', '$2b$10$/be5.8oYPnJfjwZEePYF4uAdhPPW.emkCX0o3zQYpLHxSheWlpFTa', 'Admin', 'User', 'admin'),
-('employee@insurance.com', '$2b$10$/be5.8oYPnJfjwZEePYF4uAdhPPW.emkCX0o3zQYpLHxSheWlpFTa', 'Employee', 'User', 'employee'),
-('john.doe@email.com', '$2b$10$/be5.8oYPnJfjwZEePYF4uAdhPPW.emkCX0o3zQYpLHxSheWlpFTa', 'John', 'Doe', 'customer'),
-('jane.smith@email.com', '$2b$10$/be5.8oYPnJfjwZEePYF4uAdhPPW.emkCX0o3zQYpLHxSheWlpFTa', 'Jane', 'Smith', 'customer');
+INSERT INTO users (email, password_hash, first_name, last_name, role, department_id, phone) VALUES
+('admin@insurance.com', '$2b$10$/be5.8oYPnJfjwZEePYF4uAdhPPW.emkCX0o3zQYpLHxSheWlpFTa', 'Admin', 'User', 'admin', 1, '987654321'),
+('employee@insurance.com', '$2b$10$/be5.8oYPnJfjwZEePYF4uAdhPPW.emkCX0o3zQYpLHxSheWlpFTa', 'Employee', 'User', 'employee', 2, '912345678'),
+('john.doe@email.com', '$2b$10$/be5.8oYPnJfjwZEePYF4uAdhPPW.emkCX0o3zQYpLHxSheWlpFTa', 'John', 'Doe', 'customer', 3, '998877665'),
+('jane.smith@email.com', '$2b$10$/be5.8oYPnJfjwZEePYF4uAdhPPW.emkCX0o3zQYpLHxSheWlpFTa', 'Jane', 'Smith', 'customer', 4, '955443322');
 
 -- ===============================================
 -- VIEWS FOR REPORTING
 -- ===============================================
+
+-- Current Policies (SCD Type 2)
+CREATE VIEW current_policies AS
+SELECT 
+    p.id,
+    p.policy_number,
+    p.user_id,
+    p.insurance_type_id,
+    p.status,
+    p.start_date,
+    p.end_date,
+    p.premium_amount,
+    p.coverage_amount,
+    p.life_details,
+    p.rent_details,
+    p.vehicle_details,
+    p.created_at,
+    p.updated_at,
+    CASE 
+        WHEN p.end_date IS NOT NULL AND p.end_date < CURRENT_DATE THEN true
+        ELSE false
+    END as is_expired,
+    CASE 
+        WHEN p.end_date IS NOT NULL THEN (p.end_date - CURRENT_DATE)
+        ELSE NULL
+    END as days_until_expiration
+FROM policies p
+WHERE p.is_current = true;
 
 -- Active Policies Summary
 CREATE VIEW active_policies_summary AS
@@ -192,6 +250,36 @@ SELECT
     p.premium_amount,
     p.coverage_amount,
     p.start_date,
+    p.end_date,
+    p.status
+FROM policies p
+JOIN users u ON p.user_id = u.id
+JOIN insurance_types it ON p.insurance_type_id = it.id
+WHERE p.status = 'active' AND p.is_current = true;
+
+-- User Statistics
+CREATE VIEW user_policy_stats AS
+SELECT 
+    u.id,
+    u.email,
+    u.first_name,
+    u.last_name,
+    COUNT(p.id) as total_policies,
+    SUM(CASE WHEN p.status = 'active' THEN 1 ELSE 0 END) as active_policies,
+    SUM(p.premium_amount) as total_premium
+FROM users u
+LEFT JOIN policies p ON u.id = p.user_id
+GROUP BY u.id, u.email, u.first_name, u.last_name;
+
+-- ===============================================
+-- COMMENTS
+-- ===============================================
+COMMENT ON TABLE users IS 'User accounts for customers and administrators';
+COMMENT ON TABLE insurance_types IS 'Types of insurance products offered';
+COMMENT ON TABLE policies IS 'Insurance policies with type-specific details stored in JSONB. Uses SCD Type 2 for version history.';
+COMMENT ON TABLE policy_claims IS 'Claims submitted against policies';
+COMMENT ON COLUMN policies.is_current IS 'SCD Type 2: Indica si este registro es la versión actual de la póliza';
+COMMENT ON COLUMN policies.effective_end_date IS 'SCD Type 2: Timestamp cuando esta versión dejó de ser la actual';
     p.end_date,
     p.status
 FROM policies p

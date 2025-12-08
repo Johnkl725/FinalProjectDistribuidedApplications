@@ -51,7 +51,7 @@ export class ClaimRepository extends BaseRepository<PolicyClaim> {
       JOIN policies p ON c.policy_id = p.id
       JOIN insurance_types it ON p.insurance_type_id = it.id
       JOIN users u ON p.user_id = u.id
-      WHERE p.user_id = $1
+      WHERE p.user_id = $1 AND p.is_current = true
       ORDER BY c.created_at DESC
     `;
 
@@ -195,7 +195,7 @@ export class ClaimRepository extends BaseRepository<PolicyClaim> {
   async validatePolicyForClaim(policyId: number): Promise<boolean> {
     const query = `
       SELECT id FROM policies
-      WHERE id = $1 AND status IN ('issued', 'active')
+      WHERE id = $1 AND status IN ('issued', 'active') AND is_current = true
     `;
 
     const result = await this.executeQuery(query, [policyId]);
