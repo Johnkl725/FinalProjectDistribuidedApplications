@@ -1,0 +1,99 @@
+services:
+  # Auth Service
+  - type: web
+    name: insurance-auth-service
+    runtime: docker
+    dockerfilePath: ./auth-service/Dockerfile.prod
+    dockerContext: .
+    plan: free
+    envVars:
+      - key: DATABASE_URL
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true
+      - key: JWT_EXPIRATION
+        value: 24h
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 3001
+
+  # Life Insurance Service
+  - type: web
+    name: insurance-life-service
+    runtime: docker
+    dockerfilePath: ./life-insurance-service/Dockerfile.prod
+    dockerContext: .
+    plan: free
+    envVars:
+      - key: DATABASE_URL
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 3002
+
+  # Rent Insurance Service
+  - type: web
+    name: insurance-rent-service
+    runtime: docker
+    dockerfilePath: ./rent-insurance-service/Dockerfile.prod
+    dockerContext: .
+    plan: free
+    envVars:
+      - key: DATABASE_URL
+        sync: false
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 3003
+
+  # Vehicle Insurance Service
+  - type: web
+    name: insurance-vehicle-service
+    runtime: docker
+    dockerfilePath: ./vehicle-insurance-service/Dockerfile.prod
+    dockerContext: .
+    plan: free
+    envVars:
+      - key: DATABASE_URL
+        sync: false
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 3004
+
+  # API Gateway
+  - type: web
+    name: insurance-api-gateway
+    runtime: docker
+    dockerfilePath: ./api-gateway/Dockerfile.prod
+    dockerContext: .
+    plan: free
+    envVars:
+      - key: DATABASE_URL
+        sync: false
+      - key: JWT_SECRET
+        sync: false
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 3000
+      - key: AUTH_SERVICE_URL
+        value: https://insurance-auth-service.onrender.com
+      - key: LIFE_SERVICE_URL
+        value: https://insurance-life-service.onrender.com
+      - key: RENT_SERVICE_URL
+        value: https://insurance-rent-service.onrender.com
+      - key: VEHICLE_SERVICE_URL
+        value: https://insurance-vehicle-service.onrender.com
+
+  # Frontend
+  - type: web
+    name: insurance-frontend
+    runtime: docker
+    dockerfilePath: ./frontend/Dockerfile.prod
+    dockerContext: .
+    plan: free
+    envVars:
+      - key: VITE_API_URL
+        value: https://insurance-api-gateway.onrender.com
