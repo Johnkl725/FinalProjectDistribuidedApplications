@@ -7,8 +7,6 @@ services:
     dockerContext: .
     plan: free
     envVars:
-      - key: DATABASE_URL
-        sync: false
       - key: JWT_SECRET
         generateValue: true
       - key: JWT_EXPIRATION
@@ -26,7 +24,6 @@ services:
     dockerContext: .
     plan: free
     envVars:
-      - key: DATABASE_URL
       - key: NODE_ENV
         value: production
       - key: PORT
@@ -40,8 +37,6 @@ services:
     dockerContext: .
     plan: free
     envVars:
-      - key: DATABASE_URL
-        sync: false
       - key: NODE_ENV
         value: production
       - key: PORT
@@ -55,8 +50,6 @@ services:
     dockerContext: .
     plan: free
     envVars:
-      - key: DATABASE_URL
-        sync: false
       - key: NODE_ENV
         value: production
       - key: PORT
@@ -70,10 +63,6 @@ services:
     dockerContext: .
     plan: free
     envVars:
-      - key: DATABASE_URL
-        sync: false
-      - key: JWT_SECRET
-        sync: false
       - key: NODE_ENV
         value: production
       - key: PORT
