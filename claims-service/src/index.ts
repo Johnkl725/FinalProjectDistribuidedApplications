@@ -8,8 +8,7 @@ import helmet from 'helmet';
 import morgan from 'morgan';
 import dotenv from 'dotenv';
 import claimRoutes from './routes/claim.routes';
-import { getDatabase } from '../../shared/src/database/connection';
-import { errorResponse } from '../../shared/src/utils/api-response';
+import { getDatabase, errorResponse } from 'shared';
 
 dotenv.config();
 
