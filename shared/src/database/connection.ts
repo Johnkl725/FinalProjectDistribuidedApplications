@@ -21,7 +21,8 @@ export class DatabaseConnection {
       password: process.env.DB_PASSWORD || 'postgres',
       max: 20, // Maximum number of clients in the pool
       idleTimeoutMillis: 30000,
-      connectionTimeoutMillis: 2000,
+      connectionTimeoutMillis: 10000, // Increased for cloud databases
+      ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false, // Enable SSL for Render
     });
 
     this.pool.on('connect', () => {

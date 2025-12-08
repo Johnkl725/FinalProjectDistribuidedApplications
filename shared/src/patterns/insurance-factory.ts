@@ -20,7 +20,7 @@ export interface BaseInsuranceData {
   userId: number;
   coverageAmount: number;
   startDate: Date;
-  endDate: Date;
+  endDate?: Date;
 }
 
 export interface LifeInsuranceData extends BaseInsuranceData {
@@ -57,7 +57,7 @@ export abstract class BaseInsurance implements IInsurance {
   protected userId: number;
   protected coverageAmount: number;
   protected startDate: Date;
-  protected endDate: Date;
+  protected endDate?: Date;
   protected basePremium: number;
 
   constructor(data: BaseInsuranceData, type: string, basePremium: number) {
@@ -75,7 +75,7 @@ export abstract class BaseInsurance implements IInsurance {
 
   protected calculateDurationInMonths(): number {
     const start = new Date(this.startDate);
-    const end = new Date(this.endDate);
+    const end = this.endDate ? new Date(this.endDate) : new Date();
     const months = (end.getFullYear() - start.getFullYear()) * 12 + (end.getMonth() - start.getMonth());
     return months || 1;
   }
