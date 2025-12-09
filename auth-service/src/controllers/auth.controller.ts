@@ -50,7 +50,6 @@ export class AuthController {
         return;
       }
 
-      console.log('✅ Validation passed, calling service...');
       const result = await this.authService.register({
         email,
         password,
@@ -59,14 +58,13 @@ export class AuthController {
         role,
       });
 
-      console.log('✅ User registered successfully');
       res.status(HTTP_STATUS.CREATED).json(
         successResponse(result, 'User registered successfully')
       );
     } catch (error: any) {
-      console.log('❌ Registration error:', error.message);
+      // Security: Generic error message for public endpoint
       res.status(HTTP_STATUS.BAD_REQUEST).json(
-        errorResponse(error.message)
+        errorResponse('Unable to complete registration')
       );
     }
   };
@@ -93,8 +91,9 @@ export class AuthController {
         successResponse(result, 'Login successful')
       );
     } catch (error: any) {
+      // Security: Always return generic message for login failures
       res.status(HTTP_STATUS.UNAUTHORIZED).json(
-        errorResponse(error.message)
+        errorResponse('Invalid credentials')
       );
     }
   };
@@ -112,8 +111,9 @@ export class AuthController {
         successResponse(user)
       );
     } catch (error: any) {
+      // Authenticated endpoint: specific message is OK
       res.status(HTTP_STATUS.NOT_FOUND).json(
-        errorResponse(error.message)
+        errorResponse('Unable to load profile')
       );
     }
   };
@@ -151,8 +151,9 @@ export class AuthController {
         successResponse(user, 'Profile updated successfully')
       );
     } catch (error: any) {
+      // Authenticated endpoint: can provide specific validation errors
       res.status(HTTP_STATUS.BAD_REQUEST).json(
-        errorResponse(error.message)
+        errorResponse(error.message || 'Unable to update profile')
       );
     }
   };
@@ -179,8 +180,9 @@ export class AuthController {
         successResponse(null, 'Password changed successfully')
       );
     } catch (error: any) {
+      // Authenticated endpoint: specific error helps user
       res.status(HTTP_STATUS.BAD_REQUEST).json(
-        errorResponse(error.message)
+        errorResponse(error.message || 'Unable to change password')
       );
     }
   };
@@ -221,12 +223,12 @@ export class AuthController {
         return;
       }
 
-      const result = await this.authService.register({
+      // Create employee with additional fields (phone, department_id)
+      const result = await this.authService.createEmployee({
         email,
         password,
         first_name: finalFirstName,
         last_name: finalLastName,
-        role: 'employee',
         department_id: department_id || null,
         phone: phone || null,
       });
@@ -235,8 +237,9 @@ export class AuthController {
         successResponse(result, 'Employee created successfully')
       );
     } catch (error: any) {
+      // Security: Generic error message
       res.status(HTTP_STATUS.BAD_REQUEST).json(
-        errorResponse(error.message)
+        errorResponse('Unable to create employee')
       );
     }
   };

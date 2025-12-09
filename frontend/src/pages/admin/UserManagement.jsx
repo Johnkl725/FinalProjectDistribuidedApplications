@@ -45,23 +45,6 @@ export default function UserManagement() {
     }
   };
 
-  const updateUserRole = async (userId, newRole) => {
-    try {
-      const token = localStorage.getItem('token');
-      await axios.put(
-        `${API_ENDPOINTS.users}/${userId}/role`,
-        { role: newRole },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      setSuccess('Rol actualizado exitosamente');
-      fetchUsers();
-      setTimeout(() => setSuccess(''), 3000);
-    } catch (err) {
-      setError(err.response?.data?.message || 'Error al actualizar rol');
-      setTimeout(() => setError(''), 3000);
-    }
-  };
-
   const getRoleBadge = (role) => {
     const colors = {
       admin: 'bg-red-100 text-red-700',
@@ -159,15 +142,6 @@ export default function UserManagement() {
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                    <select
-                      value={user.role}
-                      onChange={(e) => updateUserRole(user.id, e.target.value)}
-                      className="mr-3 px-2 py-1 border border-gray-300 rounded text-sm"
-                    >
-                      <option value="customer">Cliente</option>
-                      <option value="employee">Empleado</option>
-                      <option value="admin">Admin</option>
-                    </select>
                     <button
                       onClick={() => deleteUser(user.id)}
                       className="text-red-600 hover:text-red-900"

@@ -31,9 +31,10 @@ export const AuthProvider = ({ children }) => {
 
       return { success: true };
     } catch (error) {
+      // Security: Friendly message without exposing technical details
       return {
         success: false,
-        error: error.response?.data?.message || 'Error al iniciar sesión'
+        error: 'Email o contraseña incorrectos. Por favor, verifica tus credenciales.'
       };
     }
   };
@@ -50,9 +51,10 @@ export const AuthProvider = ({ children }) => {
 
       return { success: true };
     } catch (error) {
+      // Security: Friendly message without exposing validation details
       return {
         success: false,
-        error: error.response?.data?.message || 'Error al registrarse'
+        error: 'No se pudo completar el registro. Verifica que todos los campos sean correctos.'
       };
     }
   };
