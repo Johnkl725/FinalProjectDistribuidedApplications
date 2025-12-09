@@ -6,6 +6,12 @@ FROM node:20-alpine
 
 WORKDIR /app
 
+# Configure npm for better network resilience
+RUN npm config set fetch-timeout 600000 && \
+    npm config set fetch-retries 5 && \
+    npm config set fetch-retry-mintimeout 20000 && \
+    npm config set fetch-retry-maxtimeout 120000
+
 # Copy shared module first
 COPY shared /shared
 WORKDIR /shared
