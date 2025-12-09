@@ -77,11 +77,15 @@ export class LifeInsuranceService {
    * Get a quote for life insurance (no policy creation)
    */
   async getQuote(data: QuoteLifeInsuranceDTO): Promise<{ premium: number; details: any }> {
+    // If end_date is not provided, assume a 12-month duration from start_date
+    const startDate = new Date(data.start_date);
+    const endDate = data.end_date ? new Date(data.end_date) : this.addMonths(startDate, 12);
+
     const insuranceData: LifeInsuranceData = {
       userId: 0, // Dummy user ID for quote
       coverageAmount: data.coverage_amount,
-      startDate: new Date(data.start_date),
-      endDate: new Date(data.end_date),
+      startDate,
+      endDate,
       age: data.age,
       medicalHistory: 'N/A',
       smoker: data.smoker,
@@ -97,7 +101,7 @@ export class LifeInsuranceService {
         coverage_amount: data.coverage_amount,
         age: data.age,
         smoker: data.smoker,
-        duration_months: this.calculateMonths(data.start_date, data.end_date),
+        duration_months: this.calculateMonths(startDate, endDate),
       },
     };
   }
@@ -215,7 +219,17 @@ export class LifeInsuranceService {
   private calculateMonths(startDate: Date, endDate: Date): number {
     const start = new Date(startDate);
     const end = new Date(endDate);
-    return (end.getFullYear() - start.getFullYear()) * 12 + (end.getMonth() - start.getMonth());
+    const months = (end.getFullYear() - start.getFullYear()) * 12 + (end.getMonth() - start.getMonth());
+    return Math.max(1, months);
+  }
+
+  /**
+   * Private: Add months to a date without mutating the original
+   */
+  private addMonths(date: Date, months: number): Date {
+    const d = new Date(date);
+    d.setMonth(d.getMonth() + months);
+    return d;
   }
 }
 

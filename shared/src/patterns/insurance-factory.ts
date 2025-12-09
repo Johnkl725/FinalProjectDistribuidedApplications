@@ -75,9 +75,15 @@ export abstract class BaseInsurance implements IInsurance {
 
   protected calculateDurationInMonths(): number {
     const start = new Date(this.startDate);
-    const end = this.endDate ? new Date(this.endDate) : new Date();
+    // If no endDate is provided, assume a 12-month duration from startDate
+    const end = this.endDate ? new Date(this.endDate) : new Date(start);
+    if (!this.endDate) {
+      end.setMonth(end.getMonth() + 12);
+    }
+
     const months = (end.getFullYear() - start.getFullYear()) * 12 + (end.getMonth() - start.getMonth());
-    return months || 1;
+    // Guarantee at least 1 month to avoid negative or zero durations
+    return Math.max(1, months);
   }
 }
 
