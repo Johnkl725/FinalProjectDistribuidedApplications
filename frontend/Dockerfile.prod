@@ -17,10 +17,9 @@ RUN npm ci
 # Copy source code from frontend directory
 COPY frontend/ .
 
-# Accept build argument and set as environment variable
-# Default value for local builds, overridable by Render
-ARG VITE_API_URL=https://insurance-api-gateway.onrender.com/api
-ENV VITE_API_URL=${VITE_API_URL}
+# Set API URL directly for production build
+# Vite requires this at BUILD TIME, not runtime
+ENV VITE_API_URL=https://insurance-api-gateway.onrender.com/api
 
 # Build for production (Vite will use VITE_API_URL)
 RUN npm run build
