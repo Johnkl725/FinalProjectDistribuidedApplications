@@ -280,31 +280,3 @@ COMMENT ON TABLE policies IS 'Insurance policies with type-specific details stor
 COMMENT ON TABLE policy_claims IS 'Claims submitted against policies';
 COMMENT ON COLUMN policies.is_current IS 'SCD Type 2: Indica si este registro es la versión actual de la póliza';
 COMMENT ON COLUMN policies.effective_end_date IS 'SCD Type 2: Timestamp cuando esta versión dejó de ser la actual';
-    p.end_date,
-    p.status
-FROM policies p
-JOIN users u ON p.user_id = u.id
-JOIN insurance_types it ON p.insurance_type_id = it.id
-WHERE p.status = 'active';
-
--- User Statistics
-CREATE VIEW user_policy_stats AS
-SELECT 
-    u.id,
-    u.email,
-    u.first_name,
-    u.last_name,
-    COUNT(p.id) as total_policies,
-    SUM(CASE WHEN p.status = 'active' THEN 1 ELSE 0 END) as active_policies,
-    SUM(p.premium_amount) as total_premium
-FROM users u
-LEFT JOIN policies p ON u.id = p.user_id
-GROUP BY u.id, u.email, u.first_name, u.last_name;
-
--- ===============================================
--- COMMENTS
--- ===============================================
-COMMENT ON TABLE users IS 'User accounts for customers and administrators';
-COMMENT ON TABLE insurance_types IS 'Types of insurance products offered';
-COMMENT ON TABLE policies IS 'Insurance policies with type-specific details stored in JSONB';
-COMMENT ON TABLE policy_claims IS 'Claims submitted against policies';

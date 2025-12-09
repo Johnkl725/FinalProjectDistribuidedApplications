@@ -2,10 +2,11 @@
 // RENT INSURANCE ROUTES
 // ===============================================
 
-import { Router } from "express";
-import { RentInsuranceController } from "../controllers/rent-insurance.controller";
-import { authMiddleware } from "../middleware/auth.middleware";
-import { adminMiddleware } from "../middleware/admin.middleware";
+import { Router } from 'express';
+import { RentInsuranceController } from '../controllers/rent-insurance.controller';
+import { authMiddleware } from '../middleware/auth.middleware';
+import { adminMiddleware } from '../middleware/admin.middleware';
+import { employeeMiddleware } from '../middleware/employee.middleware';
 
 const router = Router();
 const controller = new RentInsuranceController();
@@ -14,18 +15,27 @@ const controller = new RentInsuranceController();
 router.get("/health", controller.healthCheck);
 
 // Protected routes (require authentication)
-router.post("/quote", authMiddleware, controller.getQuote);
-router.post("/policies", authMiddleware, controller.createPolicy);
-router.get("/policies/my", authMiddleware, controller.getUserPolicies);
-router.get("/policies/id/:id", authMiddleware, controller.getPolicyById);
-// Generate PDF before generic policyNumber route to avoid conflicts
-router.get("/policies/:id/pdf", authMiddleware, controller.generatePolicyPDF);
-router.get(
-  "/policies/:policyNumber",
-  authMiddleware,
-  controller.getPolicyByNumber
-);
-router.put("/policies/:id/cancel", authMiddleware, controller.cancelPolicy);
+router.post('/quote', authMiddleware, controller.getQuote);
+router.post('/policies', authMiddleware, controller.createPolicy);
+
+// ========================================
+// NEW ENDPOINTS - DATABASE VIEWS (must be before dynamic routes)
+// ========================================
+
+// Get current policies with expiration indicators (authenticated users)
+router.get('/policies/current', authMiddleware, controller.getCurrentPolicies);
+
+// Get user policy statistics (authenticated users)
+router.get('/users/stats', authMiddleware, controller.getUserStats);
+
+// Get active policies summary (employees and admins only)
+router.get('/admin/policies/summary', authMiddleware, employeeMiddleware, controller.getActivePoliciesSummary);
+
+// Other policy routes
+router.get('/policies/my', authMiddleware, controller.getUserPolicies);
+router.get('/policies/id/:id', authMiddleware, controller.getPolicyById);
+router.get('/policies/:policyNumber', authMiddleware, controller.getPolicyByNumber);
+router.put('/policies/:id/cancel', authMiddleware, controller.cancelPolicy);
 
 // Admin routes
 router.get(

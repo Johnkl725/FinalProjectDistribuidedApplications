@@ -34,7 +34,8 @@ export class AuthService {
     // Check if email already exists
     const existingUser = await this.userRepository.findByEmail(userData.email);
     if (existingUser) {
-      throw new Error('Email already registered');
+      // Security: Generic error - don't help enumerate existing users
+      throw new Error('Unable to complete registration');
     }
 
     // Hash password
@@ -63,24 +64,82 @@ export class AuthService {
   }
 
   /**
+   * Create employee (admin only)
+   */
+  async createEmployee(employeeData: {
+    email: string;
+    password: string;
+    first_name: string;
+    last_name: string;
+    department_id?: number | null;
+    phone?: string | null;
+  }): Promise<{ user: UserResponse; token: string }> {
+    // Validate email
+    if (!isValidEmail(employeeData.email)) {
+      throw new Error('Invalid email format');
+    }
+
+    // Validate password
+    if (!isValidPassword(employeeData.password)) {
+      throw new Error('Password must be at least 8 characters with 1 uppercase, 1 lowercase, and 1 number');
+    }
+
+    // Check if email already exists
+    const existingUser = await this.userRepository.findByEmail(employeeData.email);
+    if (existingUser) {
+      // Security: Generic error - don't help enumerate existing users
+      throw new Error('Unable to create employee');
+    }
+
+    // Hash password
+    const passwordHash = await bcrypt.hash(employeeData.password, SALT_ROUNDS);
+
+    // Create employee with all fields
+    const newUser = await this.userRepository.createUser({
+      email: employeeData.email.toLowerCase(),
+      password_hash: passwordHash,
+      first_name: employeeData.first_name,
+      last_name: employeeData.last_name,
+      role: 'employee',
+      department_id: employeeData.department_id,
+      phone: employeeData.phone,
+    });
+
+    // Generate JWT token
+    const token = generateToken({
+      userId: newUser.id!,
+      email: newUser.email,
+      role: newUser.role,
+    });
+
+    return {
+      user: this.sanitizeUser(newUser),
+      token,
+    };
+  }
+
+  /**
    * Login user
    */
   async login(credentials: UserLogin): Promise<{ user: UserResponse; token: string }> {
     // Find user by email
     const user = await this.userRepository.findByEmail(credentials.email.toLowerCase());
     if (!user) {
-      throw new Error('Invalid email or password');
+      // Security: Generic error message - don't reveal if email exists
+      throw new Error('Invalid credentials');
     }
 
     // Check if user is active
     if (!user.is_active) {
-      throw new Error('Account is deactivated');
+      // Security: Same generic message - don't reveal account status
+      throw new Error('Invalid credentials');
     }
 
     // Verify password
     const isPasswordValid = await bcrypt.compare(credentials.password, user.password_hash!);
     if (!isPasswordValid) {
-      throw new Error('Invalid email or password');
+      // Security: Same generic message - don't reveal password is wrong
+      throw new Error('Invalid credentials');
     }
 
     // Generate JWT token

@@ -1,3 +1,5 @@
+import { API_ENDPOINTS } from '../config/api.config';
+import axios from 'axios';
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
@@ -13,6 +15,7 @@ import {
   DollarSign
 } from 'lucide-react';
 import { lifeInsuranceAPI, vehicleInsuranceAPI, rentInsuranceAPI } from '../services/api';
+import UserStats from '../components/UserStats';
 
 export default function Dashboard() {
   const { user } = useAuth();
@@ -29,16 +32,39 @@ export default function Dashboard() {
 
   const loadPolicies = async () => {
     try {
-      const [lifeRes, vehicleRes, rentRes] = await Promise.all([
-        lifeInsuranceAPI.getMyPolicies(),
-        vehicleInsuranceAPI.getMyPolicies(),
-        rentInsuranceAPI.getMyPolicies()
-      ]);
+      let lifeData = [];
+      let vehicleData = [];
+      let rentData = [];
+
+      if (user.role === 'admin') {
+        // Admin: obtiene todas las pólizas
+        const token = localStorage.getItem('token');
+        const [lifeRes, vehicleRes, rentRes] = await Promise.all([
+          axios.get(`${API_ENDPOINTS.lifeInsurance}/policies`, { headers: { Authorization: `Bearer ${token}` } }),
+          axios.get(`${API_ENDPOINTS.vehicleInsurance}/policies`, { headers: { Authorization: `Bearer ${token}` } }),
+          axios.get(`${API_ENDPOINTS.rentInsurance}/policies`, { headers: { Authorization: `Bearer ${token}` } }),
+        ]);
+
+        lifeData = lifeRes.data.data || [];
+        vehicleData = vehicleRes.data.data || [];
+        rentData = rentRes.data.data || [];
+      } else {
+        // Usuario normal: obtiene solo sus pólizas
+        const [lifeRes, vehicleRes, rentRes] = await Promise.all([
+          lifeInsuranceAPI.getMyPolicies(),
+          vehicleInsuranceAPI.getMyPolicies(),
+          rentInsuranceAPI.getMyPolicies(),
+        ]);
+
+        lifeData = lifeRes.data.data || [];
+        vehicleData = vehicleRes.data.data || [];
+        rentData = rentRes.data.data || [];
+      }
 
       setPolicies({
-        life: lifeRes.data.data || [],
-        vehicle: vehicleRes.data.data || [],
-        rent: rentRes.data.data || []
+        life: lifeData,
+        vehicle: vehicleData,
+        rent: rentData
       });
     } catch (error) {
       console.error('Error loading policies:', error);
@@ -46,6 +72,7 @@ export default function Dashboard() {
       setLoading(false);
     }
   };
+
 
   const totalPolicies = policies.life.length + policies.vehicle.length + policies.rent.length;
   const activePolicies = [
@@ -99,25 +126,31 @@ export default function Dashboard() {
         </p>
       </div>
 
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="card">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600">Total de Pólizas</p>
-              <p className="text-3xl font-bold text-gray-900 mt-2">{totalPolicies}</p>
+      {/* User Stats - New Component */}
+      {user.role === 'customer' && <UserStats />}
+
+      {/* Stats Cards (for admins) */}
+      {user.role !== 'customer' && (
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="card">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600">Total de Pólizas</p>
+                <p className="text-3xl font-bold text-gray-900 mt-2">{totalPolicies}</p>
+              </div>
+              <div className="bg-primary-100 p-3 rounded-lg">
+                <FileText className="h-8 w-8 text-primary-600" />
+              </div>
             </div>
-            <div className="bg-primary-100 p-3 rounded-lg">
-              <FileText className="h-8 w-8 text-primary-600" />
+            <div className="mt-4">
+              {user.role !== 'admin' && (
+                <Link to="/policies" className="text-sm text-primary-600 hover:text-primary-700 font-medium flex items-center">
+                  {user.role === 'user' ? 'Pólizas' : 'Ver todas'}
+                  {user.role !== 'user' && <ArrowRight className="h-4 w-4 ml-1" />}
+                </Link>
+              )}
             </div>
           </div>
-          <div className="mt-4">
-            <Link to="/policies" className="text-sm text-primary-600 hover:text-primary-700 font-medium flex items-center">
-              Ver todas
-              <ArrowRight className="h-4 w-4 ml-1" />
-            </Link>
-          </div>
-        </div>
 
         <div className="card">
           <div className="flex items-center justify-between">
@@ -152,46 +185,83 @@ export default function Dashboard() {
           </div>
         </div>
       </div>
+      )}
 
-      {/* Insurance Types */}
+      {/* Insurance Types / Expiring Policies */}
       <div>
-        <h2 className="text-2xl font-bold text-gray-900 mb-4">Cotiza un Nuevo Seguro</h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {insuranceTypes.map((type) => (
-            <Link
-              key={type.name}
-              to={type.link}
-              className="insurance-card hover:scale-105"
-            >
-              <div className="flex items-start justify-between mb-4">
-                <div className={`${type.color} p-3 rounded-lg`}>
-                  <type.icon className="h-8 w-8 text-white" />
-                </div>
-                {type.count > 0 && (
-                  <span className="px-3 py-1 bg-primary-100 text-primary-700 text-xs font-semibold rounded-full">
-                    {type.count} activa{type.count > 1 ? 's' : ''}
-                  </span>
-                )}
-              </div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">{type.name}</h3>
-              <p className="text-gray-600 mb-4">{type.description}</p>
-              <div className="flex items-center text-primary-600 font-medium">
-                Cotizar ahora
-                <ArrowRight className="h-4 w-4 ml-2" />
-              </div>
-            </Link>
-          ))}
-        </div>
+        {user?.role === 'admin' ? (
+          <>
+            <h2 className="text-2xl font-bold text-gray-900 mb-4">Pólizas por Vencer</h2>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {[
+                { name: 'Seguro de Vida', data: policies.life, icon: Heart, color: 'bg-red-500' },
+                { name: 'Seguro de Vehículo', data: policies.vehicle, icon: Car, color: 'bg-blue-500' },
+                { name: 'Seguro de Renta', data: policies.rent, icon: Building, color: 'bg-green-500' }
+              ].map((type) => {
+                const expiringCount = type.data.filter(p => {
+                  if (!p.end_date) return false;
+                  const end = new Date(p.end_date);
+                  const today = new Date();
+                  const diffDays = (end - today) / (1000 * 60 * 60 * 24);
+                  return diffDays <= 30; // próximas 30 días
+                }).length;
+
+                return (
+                  <div key={type.name} className="insurance-card hover:scale-105 p-6 border rounded-lg bg-white shadow">
+                    <div className="flex items-center justify-between mb-4">
+                      <div className={`${type.color} p-3 rounded-lg`}>
+                        <type.icon className="h-8 w-8 text-white" />
+                      </div>
+                      <span className="px-3 py-1 bg-primary-100 text-primary-700 text-xs font-semibold rounded-full">
+                        {expiringCount} {expiringCount === 1 ? 'póliza' : 'pólizas'}
+                      </span>
+                    </div>
+                    <h3 className="text-xl font-semibold text-gray-900 mb-2">{type.name}</h3>
+                  </div>
+                );
+              })}
+            </div>
+          </>
+        ) : (
+          <>
+            <h2 className="text-2xl font-bold text-gray-900 mb-4">Cotiza un Nuevo Seguro</h2>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {insuranceTypes.map((type) => (
+                <Link key={type.name} to={type.link} className="insurance-card hover:scale-105">
+                  <div className="flex items-start justify-between mb-4">
+                    <div className={`${type.color} p-3 rounded-lg`}>
+                      <type.icon className="h-8 w-8 text-white" />
+                    </div>
+                    {type.count > 0 && (
+                      <span className="px-3 py-1 bg-primary-100 text-primary-700 text-xs font-semibold rounded-full">
+                        {type.count} activa{type.count > 1 ? 's' : ''}
+                      </span>
+                    )}
+                  </div>
+                  <h3 className="text-xl font-semibold text-gray-900 mb-2">{type.name}</h3>
+                  <p className="text-gray-600 mb-4">{type.description}</p>
+                  <div className="flex items-center text-primary-600 font-medium">
+                    Cotizar ahora
+                    <ArrowRight className="h-4 w-4 ml-2" />
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </>
+        )}
       </div>
+
 
       {/* Recent Policies */}
       {totalPolicies > 0 && (
         <div className="card">
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-xl font-bold text-gray-900">Pólizas Recientes</h2>
+            {user.role !== 'admin' && (
             <Link to="/policies" className="text-primary-600 hover:text-primary-700 font-medium text-sm">
               Ver todas
             </Link>
+            )}
           </div>
 
           <div className="space-y-4">

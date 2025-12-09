@@ -11,18 +11,38 @@ export default function RentInsuranceQuote() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
-  const [formData, setFormData] = useState({
-    coverage_amount: '30000',
-    start_date: new Date().toISOString().split('T')[0],
-    end_date: '',
-    address: '',
-    property_value: '',
-    usage_type: 'residential',
-    square_meters: ''
+  const [formData, setFormData] = useState(() => {
+    const startDate = new Date();
+    const endDate = new Date(startDate);
+    endDate.setFullYear(endDate.getFullYear() + 1);
+  
+    return {
+      coverage_amount: '30000',
+      start_date: startDate.toISOString().split('T')[0],
+      end_date: endDate.toISOString().split('T')[0], // un año después
+      address: '',
+      property_value: '',
+      usage_type: 'residential',
+      square_meters: ''
+    };
   });
 
   const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    
+    setFormData((prev) => {
+    let newData = { ...prev, [name]: value };
+
+    // Si cambia fecha de inicio, recalcular fecha de fin +1 año
+    if (name === 'start_date') {
+      const start = new Date(value);
+      const end = new Date(start);
+      end.setFullYear(end.getFullYear() + 1);
+      newData.end_date = end.toISOString().split('T')[0];
+    }
+
+    return newData;
+  });
     setError('');
   };
 
@@ -151,7 +171,7 @@ export default function RentInsuranceQuote() {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Fecha de Fin</label>
-                <input type="date" name="end_date" value={formData.end_date} onChange={handleChange} className="input-field" required />
+                <input type="date" name="end_date" value={formData.end_date} onChange={handleChange} className="input-field bg-gray-100 cursor-not-allowed" readOnly />
               </div>
             </div>
 

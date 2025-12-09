@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { Shield, Mail, Lock, User, AlertCircle, CheckCircle } from 'lucide-react';
+import { Shield, Mail, Lock, User } from 'lucide-react';
+import Alert from '../components/Alert';
 
 export default function Register() {
   const navigate = useNavigate();
@@ -21,7 +22,6 @@ export default function Register() {
       ...formData,
       [e.target.name]: e.target.value,
     });
-    setError('');
   };
 
   const handleSubmit = async (e) => {
@@ -48,9 +48,12 @@ export default function Register() {
       navigate('/dashboard');
     } else {
       setError(result.error);
+      setLoading(false);
     }
+  };
 
-    setLoading(false);
+  const handleCloseAlert = () => {
+    setError('');
   };
 
   return (
@@ -82,14 +85,12 @@ export default function Register() {
             </p>
           </div>
 
-          {error && (
-            <div className="mb-4 bg-red-50 border-l-4 border-red-500 p-4 rounded">
-              <div className="flex items-center">
-                <AlertCircle className="h-5 w-5 text-red-500 mr-2" />
-                <p className="text-sm text-red-700">{error}</p>
-              </div>
-            </div>
-          )}
+          <Alert 
+            type="error" 
+            message={error} 
+            onClose={handleCloseAlert}
+            dismissible={true}
+          />
 
           <form className="space-y-4" onSubmit={handleSubmit}>
             <div className="grid grid-cols-2 gap-4">
