@@ -51,7 +51,7 @@ export interface CreateLifeInsuranceDTO {
 export interface QuoteLifeInsuranceDTO {
   coverage_amount: number;
   start_date: Date;
-  end_date: Date;
+  end_date?: Date; // Optional for quotes; defaults to 12 months if not provided
   age: number;
   smoker: boolean;
 }
