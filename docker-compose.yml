@@ -4,7 +4,7 @@
 # Uses external cloud database (Render PostgreSQL)
 # ===============================================
 
-version: '3.8'
+version: "3.8"
 
 services:
   # ===============================================
@@ -26,7 +26,7 @@ services:
     command: sh /app/init-db.sh
     networks:
       - insurance-network
-    restart: "no"  # Run once and exit
+    restart: "no" # Run once and exit
 
   # ===============================================
   # Auth Service
@@ -185,6 +185,37 @@ services:
         max-file: "3"
 
   # ===============================================
+  # Renewal Service
+  # ===============================================
+  renewal-service:
+    build:
+      context: .
+      dockerfile: renewal-service/Dockerfile.prod
+    container_name: insurance-renewal-prod
+    ports:
+      - "3006:3006"
+    environment:
+      - PORT=3006
+      - NODE_ENV=production
+      - DB_HOST=${DB_HOST}
+      - DB_PORT=${DB_PORT:-5432}
+      - DB_NAME=${DB_NAME}
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - JWT_SECRET=${JWT_SECRET}
+    depends_on:
+      db-init:
+        condition: service_completed_successfully
+    networks:
+      - insurance-network
+    restart: always
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # ===============================================
   # API Gateway
   # ===============================================
   api-gateway:
@@ -203,6 +234,7 @@ services:
       - RENT_SERVICE_URL=http://rent-insurance-service:3003
       - VEHICLE_SERVICE_URL=http://vehicle-insurance-service:3004
       - CLAIMS_SERVICE_URL=http://claims-service:3005
+      - RENEWAL_SERVICE_URL=http://renewal-service:3006
       - RATE_LIMIT_WINDOW_MS=${RATE_LIMIT_WINDOW_MS:-900000}
       - RATE_LIMIT_MAX_REQUESTS=${RATE_LIMIT_MAX_REQUESTS:-100}
     depends_on:
@@ -211,6 +243,7 @@ services:
       - rent-insurance-service
       - vehicle-insurance-service
       - claims-service
+      - renewal-service
     networks:
       - insurance-network
     restart: always
@@ -249,7 +282,6 @@ services:
 networks:
   insurance-network:
     driver: bridge
-
 # ===============================================
 # Volumes
 # NOTE: No postgres-data volume needed - using external cloud database

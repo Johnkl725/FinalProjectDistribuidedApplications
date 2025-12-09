@@ -1,32 +1,38 @@
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { AuthProvider } from './context/AuthContext';
-import ProtectedRoute from './components/ProtectedRoute';
-import Layout from './components/Layout';
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  Navigate,
+} from "react-router-dom";
+import { AuthProvider } from "./context/AuthContext";
+import ProtectedRoute from "./components/ProtectedRoute";
+import Layout from "./components/Layout";
 
 // Pages
-import Login from './pages/Login';
-import Register from './pages/Register';
-import Dashboard from './pages/Dashboard';
-import LifeInsuranceQuote from './pages/LifeInsuranceQuote';
-import VehicleInsuranceQuote from './pages/VehicleInsuranceQuote';
-import RentInsuranceQuote from './pages/RentInsuranceQuote';
-import MyPolicies from './pages/MyPolicies';
-import MyClaims from './pages/MyClaims';
-import Profile from './pages/Profile';
+import Login from "./pages/Login";
+import Register from "./pages/Register";
+import Dashboard from "./pages/Dashboard";
+import LifeInsuranceQuote from "./pages/LifeInsuranceQuote";
+import VehicleInsuranceQuote from "./pages/VehicleInsuranceQuote";
+import RentInsuranceQuote from "./pages/RentInsuranceQuote";
+import MyPolicies from "./pages/MyPolicies";
+import MyClaims from "./pages/MyClaims";
+import Profile from "./pages/Profile";
 
 // Admin Pages
-import UserManagement from './pages/admin/UserManagement';
-import EmployeeManagement from './pages/admin/EmployeeManagement';
-import AdminStats from './pages/admin/AdminStats';
-import Departments from './pages/admin/Departments';
+import UserManagement from "./pages/admin/UserManagement";
+import EmployeeManagement from "./pages/admin/EmployeeManagement";
+import AdminStats from "./pages/admin/AdminStats";
+import Departments from "./pages/admin/Departments";
+import ExpiringPolicies from "./pages/admin/ExpiringPolicies";
 
 // Staff Pages
-import AllPolicies from './pages/staff/AllPolicies';
-import PendingPolicies from './pages/staff/PendingPolicies';
-import ClaimsManagement from './pages/staff/ClaimsManagement';
+import AllPolicies from "./pages/staff/AllPolicies";
+import PendingPolicies from "./pages/staff/PendingPolicies";
+import ClaimsManagement from "./pages/staff/ClaimsManagement";
 
 // Other Pages
-import CreateClaim from './pages/CreateClaim';
+import CreateClaim from "./pages/CreateClaim";
 
 function App() {
   return (
@@ -155,6 +161,17 @@ function App() {
               <ProtectedRoute>
                 <Layout>
                   <AdminStats />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/admin/expiring"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <ExpiringPolicies />
                 </Layout>
               </ProtectedRoute>
             }

@@ -308,3 +308,16 @@ COMMENT ON TABLE users IS 'User accounts for customers and administrators';
 COMMENT ON TABLE insurance_types IS 'Types of insurance products offered';
 COMMENT ON TABLE policies IS 'Insurance policies with type-specific details stored in JSONB';
 COMMENT ON TABLE policy_claims IS 'Claims submitted against policies';
+
+-- ===============================================
+-- RENEWAL NOTIFICATIONS
+-- ===============================================
+CREATE TABLE IF NOT EXISTS policy_notifications (
+    id SERIAL PRIMARY KEY,
+    policy_id INTEGER NOT NULL REFERENCES policies(id) ON DELETE CASCADE,
+    reminder_day INTEGER NOT NULL,
+    sent_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(policy_id, reminder_day)
+);
+
+COMMENT ON TABLE policy_notifications IS 'Registro de recordatorios de vencimiento por póliza y día (15/7/1)';

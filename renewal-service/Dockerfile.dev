@@ -1,0 +1,22 @@
+FROM node:18-alpine
+
+WORKDIR /app
+
+# Copy shared first (needed for local file dependency)
+COPY shared ./shared
+
+# Install shared deps and build dist
+WORKDIR /app/shared
+RUN npm install && npm run build
+
+# Back to service
+WORKDIR /app
+COPY renewal-service/package*.json ./
+RUN npm install
+
+# Copy source and config
+COPY renewal-service/tsconfig.json ./
+COPY renewal-service/src ./src
+
+CMD ["npm", "run", "dev"]
+

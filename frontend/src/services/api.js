@@ -112,4 +112,12 @@ export const claimsAPI = {
     api.put(`/claims/${id}/status`, { status }),
 };
 
+// ========== RENEWALS API ==========
+export const renewalsAPI = {
+  getExpiring: (days = 30) => api.get(`/renewals/expiring?days=${days}`),
+  runSweep: () => api.post("/renewals/run"),
+  notifyPolicy: (id, day) =>
+    api.post(`/renewals/policies/${id}/notify${day ? `?day=${day}` : ""}`),
+};
+
 export default api;
