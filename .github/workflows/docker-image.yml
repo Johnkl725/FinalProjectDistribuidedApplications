@@ -1,0 +1,43 @@
+name: Docker Compose CI
+
+on:
+  push:
+    branches: [ "main", "feature/**" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+    # 1. Descargar tu código del repositorio
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    # 2. Crear archivo .env falso para la construcción
+    # Docker Compose fallará si le faltan las variables declaradas como ${VAR}
+    - name: Create dummy .env file
+      run: |
+        echo "DB_HOST=mock_host" >> .env
+        echo "DB_PORT=5432" >> .env
+        echo "DB_NAME=mock_db" >> .env
+        echo "DB_USER=mock_user" >> .env
+        echo "DB_PASSWORD=mock_pass" >> .env
+        echo "JWT_SECRET=super_secret_build_key" >> .env
+        echo "JWT_EXPIRES_IN=24h" >> .env
+
+    # 3. Construir los servicios usando el archivo de Producción
+    # Esto verifica que tus Dockerfiles no tengan errores de sintaxis
+    # y que las librerías se instalen bien.
+    - name: Build Docker Services
+      run: docker compose -f docker-compose.yml build
+
+    # 4. (Opcional) Verificar que los contenedores levantan
+    # Levantamos todo en modo "detach" (-d) para ver si crashean al inicio
+    - name: Check Container Startup
+      run: |
+        docker compose -f docker-compose.yml up -d --no-build
+        docker ps -a
+        sleep 10
+        docker ps -a
