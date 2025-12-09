@@ -47,7 +47,7 @@ export class LifeInsuranceRepository extends BaseRepository<LifeInsurancePolicy>
       SELECT p.*, it.name as insurance_type_name
       FROM policies p
       JOIN insurance_types it ON p.insurance_type_id = it.id
-      WHERE p.user_id = $1 AND it.name = 'life'
+      WHERE p.user_id = $1 AND it.name = 'life' AND p.is_current = true
       ORDER BY p.created_at DESC
     `;
 
@@ -63,7 +63,7 @@ export class LifeInsuranceRepository extends BaseRepository<LifeInsurancePolicy>
       SELECT p.*, it.name as insurance_type_name
       FROM policies p
       JOIN insurance_types it ON p.insurance_type_id = it.id
-      WHERE p.id = $1 AND it.name = 'life'
+      WHERE p.id = $1 AND it.name = 'life' AND p.is_current = true
     `;
 
     const result = await this.executeQuery<LifeInsurancePolicy>(query, [policyId]);
@@ -78,7 +78,7 @@ export class LifeInsuranceRepository extends BaseRepository<LifeInsurancePolicy>
       SELECT p.*, it.name as insurance_type_name
       FROM policies p
       JOIN insurance_types it ON p.insurance_type_id = it.id
-      WHERE p.policy_number = $1 AND it.name = 'life'
+      WHERE p.policy_number = $1 AND it.name = 'life' AND p.is_current = true
     `;
 
     const result = await this.executeQuery<LifeInsurancePolicy>(query, [policyNumber]);
@@ -95,7 +95,7 @@ export class LifeInsuranceRepository extends BaseRepository<LifeInsurancePolicy>
       FROM policies p
       JOIN insurance_types it ON p.insurance_type_id = it.id
       JOIN users u ON p.user_id = u.id
-      WHERE it.name = 'life'
+      WHERE it.name = 'life' AND p.is_current = true
       ORDER BY p.created_at DESC
     `;
 

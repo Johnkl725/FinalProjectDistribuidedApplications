@@ -1,0 +1,16 @@
+FROM postgres:16-alpine
+
+# Install psql client tools
+RUN apk add --no-cache postgresql-client bash
+
+WORKDIR /app
+
+# Copy initialization script and SQL
+COPY scripts/init-db.sh /app/
+COPY database/init.sql /app/database/
+
+# Make script executable
+RUN chmod +x /app/init-db.sh
+
+# Run initialization
+CMD ["/app/init-db.sh"]

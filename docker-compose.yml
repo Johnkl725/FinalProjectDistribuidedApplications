@@ -154,6 +154,37 @@ services:
         max-file: "3"
 
   # ===============================================
+  # Claims Service
+  # ===============================================
+  claims-service:
+    build:
+      context: .
+      dockerfile: claims-service/Dockerfile.prod
+    container_name: insurance-claims-prod
+    ports:
+      - "3005:3005"
+    environment:
+      - PORT=3005
+      - NODE_ENV=production
+      - DB_HOST=${DB_HOST}
+      - DB_PORT=${DB_PORT:-5432}
+      - DB_NAME=${DB_NAME}
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - JWT_SECRET=${JWT_SECRET}
+    depends_on:
+      db-init:
+        condition: service_completed_successfully
+    networks:
+      - insurance-network
+    restart: always
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # ===============================================
   # API Gateway
   # ===============================================
   api-gateway:
@@ -171,6 +202,7 @@ services:
       - LIFE_SERVICE_URL=http://life-insurance-service:3002
       - RENT_SERVICE_URL=http://rent-insurance-service:3003
       - VEHICLE_SERVICE_URL=http://vehicle-insurance-service:3004
+      - CLAIMS_SERVICE_URL=http://claims-service:3005
       - RATE_LIMIT_WINDOW_MS=${RATE_LIMIT_WINDOW_MS:-900000}
       - RATE_LIMIT_MAX_REQUESTS=${RATE_LIMIT_MAX_REQUESTS:-100}
     depends_on:
@@ -178,6 +210,7 @@ services:
       - life-insurance-service
       - rent-insurance-service
       - vehicle-insurance-service
+      - claims-service
     networks:
       - insurance-network
     restart: always
@@ -192,8 +225,8 @@ services:
   # ===============================================
   frontend:
     build:
-      context: ./frontend
-      dockerfile: Dockerfile.prod
+      context: .
+      dockerfile: frontend/Dockerfile.prod
     container_name: insurance-frontend-prod
     ports:
       - "80:80"

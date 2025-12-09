@@ -1,0 +1,33 @@
+name: Docker Compose CI
+
+on:
+  push:
+    # Se activará en main y en cualquier rama que empiece por feature/
+    branches: [ "main", "feature/**" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    # Generamos las variables de entorno falsas para que Docker no falle
+    - name: Create dummy .env file
+      run: |
+        echo "DB_HOST=mock_host" >> .env
+        echo "DB_PORT=5432" >> .env
+        echo "DB_NAME=mock_db" >> .env
+        echo "DB_USER=mock_user" >> .env
+        echo "DB_PASSWORD=mock_pass" >> .env
+        echo "JWT_SECRET=super_secret_build_key" >> .env
+        echo "JWT_EXPIRES_IN=24h" >> .env
+        echo "RATE_LIMIT_WINDOW_MS=900000" >> .env
+        echo "RATE_LIMIT_MAX_REQUESTS=100" >> .env
+
+    # Construimos las imágenes
+    - name: Build Docker Services
+      run: docker compose -f docker-compose.yml build

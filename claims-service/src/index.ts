@@ -8,8 +8,7 @@ import helmet from 'helmet';
 import morgan from 'morgan';
 import dotenv from 'dotenv';
 import claimRoutes from './routes/claim.routes';
-import { getDatabase } from '../../shared/src/database/connection';
-import { errorResponse } from '../../shared/src/utils/api-response';
+import { getDatabase, errorResponse } from 'shared';
 
 dotenv.config();
 
@@ -25,6 +24,15 @@ app.use(morgan('dev'));
 
 // Routes
 app.use('/claims', claimRoutes);
+
+// Direct health check endpoint (without /claims prefix)
+app.get('/health', (req, res) => {
+  res.json({
+    status: 'healthy',
+    service: 'Claims Service',
+    timestamp: new Date().toISOString(),
+  });
+});
 
 // Root endpoint
 app.get('/', (req, res) => {

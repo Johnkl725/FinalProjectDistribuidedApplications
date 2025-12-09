@@ -13,17 +13,29 @@ export class DatabaseConnection {
   private pool: Pool;
 
   private constructor() {
-    this.pool = new Pool({
-      host: process.env.DB_HOST || 'postgres',
-      port: parseInt(process.env.DB_PORT || '5432'),
-      database: process.env.DB_NAME || 'insurance_db',
-      user: process.env.DB_USER || 'postgres',
-      password: process.env.DB_PASSWORD || 'postgres',
-      max: 20, // Maximum number of clients in the pool
-      idleTimeoutMillis: 30000,
-      connectionTimeoutMillis: 10000, // Increased for cloud databases
-      ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false, // Enable SSL for Render
-    });
+    // Si existe DATABASE_URL, usarla directamente (para Render/producción)
+    if (process.env.DATABASE_URL) {
+      this.pool = new Pool({
+        connectionString: process.env.DATABASE_URL,
+        max: 20,
+        idleTimeoutMillis: 30000,
+        connectionTimeoutMillis: 10000,
+        ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
+      });
+    } else {
+      // Fallback a variables individuales (para desarrollo)
+      this.pool = new Pool({
+        host: process.env.DB_HOST || 'postgres',
+        port: parseInt(process.env.DB_PORT || '5432'),
+        database: process.env.DB_NAME || 'insurance_db',
+        user: process.env.DB_USER || 'postgres',
+        password: process.env.DB_PASSWORD || 'postgres',
+        max: 20,
+        idleTimeoutMillis: 30000,
+        connectionTimeoutMillis: 10000,
+        ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
+      });
+    }
 
     this.pool.on('connect', () => {
       console.log('✅ Database connection established');
