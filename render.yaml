@@ -100,4 +100,4 @@ services:
     plan: free
     envVars:
       - key: VITE_API_URL
-        value: https://insurance-api-gateway.onrender.com
+        value: https://insurance-api-gateway.onrender.com/api

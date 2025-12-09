@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Users, Trash2, Edit, UserPlus, Shield, AlertCircle } from 'lucide-react';
 import axios from 'axios';
+import { API_ENDPOINTS } from '../../config/api.config';
 
 export default function UserManagement() {
   const [users, setUsers] = useState([]);
@@ -16,7 +17,7 @@ export default function UserManagement() {
     setLoading(true);
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.get('http://localhost:3000/api/auth/users', {
+      const response = await axios.get(API_ENDPOINTS.users, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setUsers(response.data.data);
@@ -32,7 +33,7 @@ export default function UserManagement() {
 
     try {
       const token = localStorage.getItem('token');
-      await axios.delete(`http://localhost:3000/api/auth/users/${userId}`, {
+      await axios.delete(`${API_ENDPOINTS.users}/${userId}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setSuccess('Usuario eliminado exitosamente');
@@ -48,7 +49,7 @@ export default function UserManagement() {
     try {
       const token = localStorage.getItem('token');
       await axios.put(
-        `http://localhost:3000/api/auth/users/${userId}/role`,
+        `${API_ENDPOINTS.users}/${userId}/role`,
         { role: newRole },
         { headers: { Authorization: `Bearer ${token}` } }
       );

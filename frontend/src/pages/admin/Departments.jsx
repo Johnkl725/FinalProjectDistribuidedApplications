@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Briefcase, Users } from 'lucide-react';
 import axios from 'axios';
+import { API_ENDPOINTS } from '../../config/api.config';
 
 export default function Departments() {
   const [departments, setDepartments] = useState([]);
@@ -13,7 +14,7 @@ export default function Departments() {
   const fetchDepartments = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.get('http://localhost:3000/api/auth/departments/stats', {
+      const response = await axios.get(`${API_ENDPOINTS.departments}/stats`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setDepartments(response.data.data);

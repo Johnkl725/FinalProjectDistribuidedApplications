@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { BarChart3, Users, FileText, TrendingUp } from 'lucide-react';
 import axios from 'axios';
+import { API_ENDPOINTS } from '../../config/api.config';
 
 export default function AdminStats() {
   const [stats, setStats] = useState(null);
@@ -13,7 +14,7 @@ export default function AdminStats() {
   const fetchStats = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.get('http://localhost:3000/api/auth/stats', {
+      const response = await axios.get(API_ENDPOINTS.stats, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setStats(response.data.data);
