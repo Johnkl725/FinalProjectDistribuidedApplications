@@ -2,12 +2,12 @@
 // VEHICLE INSURANCE REPOSITORY
 // ===============================================
 
-import { BaseRepository } from 'shared';
-import { VehicleInsurancePolicy } from '../models/vehicle-insurance.model';
+import { BaseRepository } from "shared";
+import { VehicleInsurancePolicy } from "../models/vehicle-insurance.model";
 
 export class VehicleInsuranceRepository extends BaseRepository<VehicleInsurancePolicy> {
   constructor() {
-    super('policies');
+    super("policies");
   }
 
   async createPolicy(policyData: any): Promise<VehicleInsurancePolicy> {
@@ -24,7 +24,7 @@ export class VehicleInsuranceRepository extends BaseRepository<VehicleInsuranceP
       policyData.policy_number,
       policyData.user_id,
       policyData.insurance_type_id,
-      policyData.status || 'pending',
+      policyData.status || "pending",
       policyData.start_date,
       policyData.end_date,
       policyData.premium_amount,
@@ -32,7 +32,10 @@ export class VehicleInsuranceRepository extends BaseRepository<VehicleInsuranceP
       JSON.stringify(policyData.vehicle_details),
     ];
 
-    const result = await this.executeQuery<VehicleInsurancePolicy>(query, values);
+    const result = await this.executeQuery<VehicleInsurancePolicy>(
+      query,
+      values
+    );
     return result.rows[0];
   }
 
@@ -45,7 +48,9 @@ export class VehicleInsuranceRepository extends BaseRepository<VehicleInsuranceP
       ORDER BY p.created_at DESC
     `;
 
-    const result = await this.executeQuery<VehicleInsurancePolicy>(query, [userId]);
+    const result = await this.executeQuery<VehicleInsurancePolicy>(query, [
+      userId,
+    ]);
     return result.rows;
   }
 
@@ -57,11 +62,15 @@ export class VehicleInsuranceRepository extends BaseRepository<VehicleInsuranceP
       WHERE p.id = $1 AND it.name = 'vehicle' AND p.is_current = true
     `;
 
-    const result = await this.executeQuery<VehicleInsurancePolicy>(query, [policyId]);
+    const result = await this.executeQuery<VehicleInsurancePolicy>(query, [
+      policyId,
+    ]);
     return result.rows[0] || null;
   }
 
-  async getPolicyByNumber(policyNumber: string): Promise<VehicleInsurancePolicy | null> {
+  async getPolicyByNumber(
+    policyNumber: string
+  ): Promise<VehicleInsurancePolicy | null> {
     const query = `
       SELECT p.*, it.name as insurance_type_name
       FROM policies p
@@ -69,7 +78,29 @@ export class VehicleInsuranceRepository extends BaseRepository<VehicleInsuranceP
       WHERE p.policy_number = $1 AND it.name = 'vehicle' AND p.is_current = true
     `;
 
-    const result = await this.executeQuery<VehicleInsurancePolicy>(query, [policyNumber]);
+    const result = await this.executeQuery<VehicleInsurancePolicy>(query, [
+      policyNumber,
+    ]);
+    return result.rows[0] || null;
+  }
+
+  /**
+   * Get policy with user information (for PDF generation)
+   */
+  async getPolicyWithUserInfo(policyId: number): Promise<any | null> {
+    const query = `
+      SELECT 
+        p.*,
+        it.name as insurance_type_name,
+        u.first_name,
+        u.last_name,
+        u.email
+      FROM policies p
+      JOIN insurance_types it ON p.insurance_type_id = it.id
+      JOIN users u ON p.user_id = u.id
+      WHERE p.id = $1 AND it.name = 'vehicle'
+    `;
+    const result = await this.executeQuery(query, [policyId]);
     return result.rows[0] || null;
   }
 
@@ -88,7 +119,10 @@ export class VehicleInsuranceRepository extends BaseRepository<VehicleInsuranceP
     return result.rows;
   }
 
-  async updatePolicyStatus(policyId: number, status: string): Promise<VehicleInsurancePolicy | null> {
+  async updatePolicyStatus(
+    policyId: number,
+    status: string
+  ): Promise<VehicleInsurancePolicy | null> {
     const query = `
       UPDATE policies
       SET status = $1, updated_at = CURRENT_TIMESTAMP
@@ -96,7 +130,10 @@ export class VehicleInsuranceRepository extends BaseRepository<VehicleInsuranceP
       RETURNING *
     `;
 
-    const result = await this.executeQuery<VehicleInsurancePolicy>(query, [status, policyId]);
+    const result = await this.executeQuery<VehicleInsurancePolicy>(query, [
+      status,
+      policyId,
+    ]);
     return result.rows[0] || null;
   }
 
@@ -110,7 +147,9 @@ export class VehicleInsuranceRepository extends BaseRepository<VehicleInsuranceP
       RETURNING *
     `;
 
-    const result = await this.executeQuery<VehicleInsurancePolicy>(query, [policyId]);
+    const result = await this.executeQuery<VehicleInsurancePolicy>(query, [
+      policyId,
+    ]);
     return result.rows[0] || null;
   }
 
@@ -121,11 +160,9 @@ export class VehicleInsuranceRepository extends BaseRepository<VehicleInsuranceP
   }
 
   async generatePolicyNumber(): Promise<string> {
-    const prefix = 'VEH';
+    const prefix = "VEH";
     const timestamp = Date.now();
     const random = Math.floor(Math.random() * 10000);
     return `${prefix}-${timestamp}-${random}`;
   }
 }
-
-
