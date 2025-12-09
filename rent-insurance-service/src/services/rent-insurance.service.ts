@@ -44,13 +44,18 @@ export class RentInsuranceService {
     const insuranceTypeId = await this.repository.getRentInsuranceTypeId();
     const policyNumber = await this.repository.generatePolicyNumber();
 
+    // Calculate end_date as start_date + 12 months
+    const startDate = new Date(data.start_date);
+    const endDate = new Date(startDate);
+    endDate.setFullYear(endDate.getFullYear() + 1);
+
     const policyData = {
       policy_number: policyNumber,
       user_id: data.user_id,
       insurance_type_id: insuranceTypeId,
       status: "issued" as const, // New policy starts as 'issued', pending admin approval
       start_date: data.start_date,
-      end_date: null, // NULL until policy is cancelled
+      end_date: endDate.toISOString().split('T')[0], // Store as YYYY-MM-DD (1 year from start)
       premium_amount: premiumAmount,
       coverage_amount: data.coverage_amount,
       rent_details: rentInsurance.getDetails(),
@@ -187,5 +192,30 @@ export class RentInsuranceService {
       (end.getFullYear() - start.getFullYear()) * 12 +
       (end.getMonth() - start.getMonth());
     return Math.max(1, months);
+  }
+
+  // ========================================
+  // NEW METHODS - DATABASE VIEWS
+  // ========================================
+
+  /**
+   * Get current policies with expiration indicators
+   */
+  async getCurrentPolicies(userId: number): Promise<any[]> {
+    return await this.repository.getCurrentPolicies(userId);
+  }
+
+  /**
+   * Get user policy statistics
+   */
+  async getUserStats(userId: number): Promise<any> {
+    return await this.repository.getUserStats(userId);
+  }
+
+  /**
+   * Get active policies summary (Admin/Employee)
+   */
+  async getActivePoliciesSummary(filters: { insurance_type?: string; email?: string }): Promise<any[]> {
+    return await this.repository.getActivePoliciesSummary(filters);
   }
 }

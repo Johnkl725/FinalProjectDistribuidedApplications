@@ -1,5 +1,5 @@
-import { API_ENDPOINTS } from '../config/api.config'; // ajusta la ruta según donde esté tu archivo
-import axios from 'axios'; // si aún no lo tienes importado
+import { API_ENDPOINTS } from '../config/api.config';
+import axios from 'axios';
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
@@ -15,6 +15,7 @@ import {
   DollarSign
 } from 'lucide-react';
 import { lifeInsuranceAPI, vehicleInsuranceAPI, rentInsuranceAPI } from '../services/api';
+import UserStats from '../components/UserStats';
 
 export default function Dashboard() {
   const { user } = useAuth();
@@ -125,27 +126,31 @@ export default function Dashboard() {
         </p>
       </div>
 
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="card">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600">Total de Pólizas</p>
-              <p className="text-3xl font-bold text-gray-900 mt-2">{totalPolicies}</p>
+      {/* User Stats - New Component */}
+      {user.role === 'customer' && <UserStats />}
+
+      {/* Stats Cards (for admins) */}
+      {user.role !== 'customer' && (
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="card">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600">Total de Pólizas</p>
+                <p className="text-3xl font-bold text-gray-900 mt-2">{totalPolicies}</p>
+              </div>
+              <div className="bg-primary-100 p-3 rounded-lg">
+                <FileText className="h-8 w-8 text-primary-600" />
+              </div>
             </div>
-            <div className="bg-primary-100 p-3 rounded-lg">
-              <FileText className="h-8 w-8 text-primary-600" />
+            <div className="mt-4">
+              {user.role !== 'admin' && (
+                <Link to="/policies" className="text-sm text-primary-600 hover:text-primary-700 font-medium flex items-center">
+                  {user.role === 'user' ? 'Pólizas' : 'Ver todas'}
+                  {user.role !== 'user' && <ArrowRight className="h-4 w-4 ml-1" />}
+                </Link>
+              )}
             </div>
           </div>
-          <div className="mt-4">
-          {user.role !== 'admin' && (
-            <Link to="/policies" className="text-sm text-primary-600 hover:text-primary-700 font-medium flex items-center">
-               {user.role === 'user' ? 'Pólizas' : 'Ver todas'}
-               {user.role !== 'user' && <ArrowRight className="h-4 w-4 ml-1" />}
-            </Link>
-          )}
-          </div>
-        </div>
 
         <div className="card">
           <div className="flex items-center justify-between">
@@ -180,6 +185,7 @@ export default function Dashboard() {
           </div>
         </div>
       </div>
+      )}
 
       {/* Insurance Types / Expiring Policies */}
       <div>

@@ -59,10 +59,10 @@ export const lifeInsuranceAPI = {
   cancelPolicy: (id) => api.put(`/life-insurance/policies/${id}/cancel`),
   getAllPolicies: () => api.get("/life-insurance/policies"),
   activatePolicy: (id) => api.put(`/life-insurance/policies/${id}/activate`),
-  downloadPDF: (id, inline = false) =>
-    api.get(`/life-insurance/policies/${id}/pdf${inline ? "?inline=1" : ""}`, {
-      responseType: "blob",
-    }),
+  // NEW: Database Views Endpoints
+  getCurrentPolicies: () => api.get('/life-insurance/policies/current'),
+  getUserStats: () => api.get('/life-insurance/users/stats'),
+  getActivePoliciesSummary: (email = '') => api.get('/life-insurance/admin/policies/summary', { params: { email } }),
 };
 
 // ========== VEHICLE INSURANCE API ==========
@@ -76,11 +76,10 @@ export const vehicleInsuranceAPI = {
   cancelPolicy: (id) => api.put(`/vehicle-insurance/policies/${id}/cancel`),
   getAllPolicies: () => api.get("/vehicle-insurance/policies"),
   activatePolicy: (id) => api.put(`/vehicle-insurance/policies/${id}/activate`),
-  downloadPDF: (id, inline = false) =>
-    api.get(
-      `/vehicle-insurance/policies/${id}/pdf${inline ? "?inline=1" : ""}`,
-      { responseType: "blob" }
-    ),
+  // NEW: Database Views Endpoints
+  getCurrentPolicies: () => api.get('/vehicle-insurance/policies/current'),
+  getUserStats: () => api.get('/vehicle-insurance/users/stats'),
+  getActivePoliciesSummary: (email = '') => api.get('/vehicle-insurance/admin/policies/summary', { params: { email } }),
 };
 
 // ========== RENT INSURANCE API ==========
@@ -94,10 +93,10 @@ export const rentInsuranceAPI = {
   cancelPolicy: (id) => api.put(`/rent-insurance/policies/${id}/cancel`),
   getAllPolicies: () => api.get("/rent-insurance/policies"),
   activatePolicy: (id) => api.put(`/rent-insurance/policies/${id}/activate`),
-  downloadPDF: (id, inline = false) =>
-    api.get(`/rent-insurance/policies/${id}/pdf${inline ? "?inline=1" : ""}`, {
-      responseType: "blob",
-    }),
+  // NEW: Database Views Endpoints
+  getCurrentPolicies: () => api.get('/rent-insurance/policies/current'),
+  getUserStats: () => api.get('/rent-insurance/users/stats'),
+  getActivePoliciesSummary: (email = '') => api.get('/rent-insurance/admin/policies/summary', { params: { email } }),
 };
 
 // ========== CLAIMS API ==========
