@@ -59,10 +59,14 @@ export const lifeInsuranceAPI = {
   cancelPolicy: (id) => api.put(`/life-insurance/policies/${id}/cancel`),
   getAllPolicies: () => api.get("/life-insurance/policies"),
   activatePolicy: (id) => api.put(`/life-insurance/policies/${id}/activate`),
-  downloadPDF: (id, inline = false) =>
-    api.get(`/life-insurance/policies/${id}/pdf${inline ? "?inline=1" : ""}`, {
-      responseType: "blob",
-    }),
+  downloadPDF: function (id, inline = false) {
+    return api.get(
+      `/life-insurance/policies/${id}/pdf${inline ? "?inline=1" : ""}`,
+      {
+        responseType: "blob",
+      }
+    );
+  },
 };
 
 // ========== VEHICLE INSURANCE API ==========
@@ -76,11 +80,12 @@ export const vehicleInsuranceAPI = {
   cancelPolicy: (id) => api.put(`/vehicle-insurance/policies/${id}/cancel`),
   getAllPolicies: () => api.get("/vehicle-insurance/policies"),
   activatePolicy: (id) => api.put(`/vehicle-insurance/policies/${id}/activate`),
-  downloadPDF: (id, inline = false) =>
-    api.get(
+  downloadPDF: function (id, inline = false) {
+    return api.get(
       `/vehicle-insurance/policies/${id}/pdf${inline ? "?inline=1" : ""}`,
       { responseType: "blob" }
-    ),
+    );
+  },
 };
 
 // ========== RENT INSURANCE API ==========
@@ -94,10 +99,14 @@ export const rentInsuranceAPI = {
   cancelPolicy: (id) => api.put(`/rent-insurance/policies/${id}/cancel`),
   getAllPolicies: () => api.get("/rent-insurance/policies"),
   activatePolicy: (id) => api.put(`/rent-insurance/policies/${id}/activate`),
-  downloadPDF: (id, inline = false) =>
-    api.get(`/rent-insurance/policies/${id}/pdf${inline ? "?inline=1" : ""}`, {
-      responseType: "blob",
-    }),
+  downloadPDF: function (id, inline = false) {
+    return api.get(
+      `/rent-insurance/policies/${id}/pdf${inline ? "?inline=1" : ""}`,
+      {
+        responseType: "blob",
+      }
+    );
+  },
 };
 
 // ========== CLAIMS API ==========
