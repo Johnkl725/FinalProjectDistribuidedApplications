@@ -222,7 +222,7 @@ npm run test:coverage
 
 ## 📝 Licencia
 
-Este proyecto es parte de un trabajo académico para la Universidad Peruana de Ciencias Aplicadas (UPC).
+Este proyecto es parte de un trabajo académico para la Universidad Nacional Mayor de San Marcos (UNMSM) FISI BASE 22 - Taller de aplicaciones distribuidas.
 
 ## 👥 Autores
 
