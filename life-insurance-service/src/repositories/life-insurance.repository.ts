@@ -2,12 +2,12 @@
 // LIFE INSURANCE REPOSITORY
 // ===============================================
 
-import { BaseRepository } from 'shared';
-import { LifeInsurancePolicy } from '../models/life-insurance.model';
+import { BaseRepository } from "shared";
+import { LifeInsurancePolicy } from "../models/life-insurance.model";
 
 export class LifeInsuranceRepository extends BaseRepository<LifeInsurancePolicy> {
   constructor() {
-    super('policies');
+    super("policies");
   }
 
   /**
@@ -27,7 +27,7 @@ export class LifeInsuranceRepository extends BaseRepository<LifeInsurancePolicy>
       policyData.policy_number,
       policyData.user_id,
       policyData.insurance_type_id,
-      policyData.status || 'pending',
+      policyData.status || "pending",
       policyData.start_date,
       policyData.end_date,
       policyData.premium_amount,
@@ -51,7 +51,9 @@ export class LifeInsuranceRepository extends BaseRepository<LifeInsurancePolicy>
       ORDER BY p.created_at DESC
     `;
 
-    const result = await this.executeQuery<LifeInsurancePolicy>(query, [userId]);
+    const result = await this.executeQuery<LifeInsurancePolicy>(query, [
+      userId,
+    ]);
     return result.rows;
   }
 
@@ -66,14 +68,55 @@ export class LifeInsuranceRepository extends BaseRepository<LifeInsurancePolicy>
       WHERE p.id = $1 AND it.name = 'life' AND p.is_current = true
     `;
 
-    const result = await this.executeQuery<LifeInsurancePolicy>(query, [policyId]);
+    const result = await this.executeQuery<LifeInsurancePolicy>(query, [
+      policyId,
+    ]);
+    return result.rows[0] || null;
+  }
+
+  /**
+   * Get policy with user info (for PDF/download)
+   */
+  async getPolicyWithUserInfo(
+    policyId: number,
+    userId?: number
+  ): Promise<
+    | (LifeInsurancePolicy & {
+        email: string;
+        first_name: string;
+        last_name: string;
+      })
+    | null
+  > {
+    const query = `
+      SELECT p.*, it.name as insurance_type_name, u.email, u.first_name, u.last_name
+      FROM policies p
+      JOIN insurance_types it ON p.insurance_type_id = it.id
+      JOIN users u ON p.user_id = u.id
+      WHERE p.id = $1
+        AND it.name = 'life'
+        AND p.is_current = true
+        ${userId ? "AND p.user_id = $2" : ""}
+    `;
+
+    const params = userId ? [policyId, userId] : [policyId];
+    const result = await this.executeQuery<
+      LifeInsurancePolicy & {
+        email: string;
+        first_name: string;
+        last_name: string;
+      }
+    >(query, params);
+
     return result.rows[0] || null;
   }
 
   /**
    * Get policy by policy number
    */
-  async getPolicyByNumber(policyNumber: string): Promise<LifeInsurancePolicy | null> {
+  async getPolicyByNumber(
+    policyNumber: string
+  ): Promise<LifeInsurancePolicy | null> {
     const query = `
       SELECT p.*, it.name as insurance_type_name
       FROM policies p
@@ -81,7 +124,9 @@ export class LifeInsuranceRepository extends BaseRepository<LifeInsurancePolicy>
       WHERE p.policy_number = $1 AND it.name = 'life' AND p.is_current = true
     `;
 
-    const result = await this.executeQuery<LifeInsurancePolicy>(query, [policyNumber]);
+    const result = await this.executeQuery<LifeInsurancePolicy>(query, [
+      policyNumber,
+    ]);
     return result.rows[0] || null;
   }
 
@@ -106,7 +151,10 @@ export class LifeInsuranceRepository extends BaseRepository<LifeInsurancePolicy>
   /**
    * Update policy status
    */
-  async updatePolicyStatus(policyId: number, status: string): Promise<LifeInsurancePolicy | null> {
+  async updatePolicyStatus(
+    policyId: number,
+    status: string
+  ): Promise<LifeInsurancePolicy | null> {
     const query = `
       UPDATE policies
       SET status = $1, updated_at = CURRENT_TIMESTAMP
@@ -114,7 +162,10 @@ export class LifeInsuranceRepository extends BaseRepository<LifeInsurancePolicy>
       RETURNING *
     `;
 
-    const result = await this.executeQuery<LifeInsurancePolicy>(query, [status, policyId]);
+    const result = await this.executeQuery<LifeInsurancePolicy>(query, [
+      status,
+      policyId,
+    ]);
     return result.rows[0] || null;
   }
 
@@ -131,7 +182,9 @@ export class LifeInsuranceRepository extends BaseRepository<LifeInsurancePolicy>
       RETURNING *
     `;
 
-    const result = await this.executeQuery<LifeInsurancePolicy>(query, [policyId]);
+    const result = await this.executeQuery<LifeInsurancePolicy>(query, [
+      policyId,
+    ]);
     return result.rows[0] || null;
   }
 
@@ -148,7 +201,7 @@ export class LifeInsuranceRepository extends BaseRepository<LifeInsurancePolicy>
    * Generate unique policy number
    */
   async generatePolicyNumber(): Promise<string> {
-    const prefix = 'LIFE';
+    const prefix = "LIFE";
     const timestamp = Date.now();
     const random = Math.floor(Math.random() * 10000);
     return `${prefix}-${timestamp}-${random}`;
@@ -230,5 +283,3 @@ export class LifeInsuranceRepository extends BaseRepository<LifeInsurancePolicy>
     return result.rows;
   }
 }
-
-

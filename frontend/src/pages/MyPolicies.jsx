@@ -1,13 +1,26 @@
-import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Heart, Car, Building, FileText, Calendar, DollarSign, AlertCircle } from 'lucide-react';
-import { lifeInsuranceAPI, vehicleInsuranceAPI, rentInsuranceAPI } from '../services/api';
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import {
+  Heart,
+  Car,
+  Building,
+  FileText,
+  Calendar,
+  DollarSign,
+  AlertCircle,
+  Download,
+} from "lucide-react";
+import {
+  lifeInsuranceAPI,
+  vehicleInsuranceAPI,
+  rentInsuranceAPI,
+} from "../services/api";
 
 export default function MyPolicies() {
   const navigate = useNavigate();
   const [policies, setPolicies] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState('all');
+  const [filter, setFilter] = useState("all");
 
   useEffect(() => {
     loadPolicies();
@@ -18,35 +31,80 @@ export default function MyPolicies() {
       const [lifeRes, vehicleRes, rentRes] = await Promise.all([
         lifeInsuranceAPI.getMyPolicies(),
         vehicleInsuranceAPI.getMyPolicies(),
-        rentInsuranceAPI.getMyPolicies()
+        rentInsuranceAPI.getMyPolicies(),
       ]);
 
       const allPolicies = [
-        ...(lifeRes.data.data || []).map(p => ({ ...p, type: 'life', icon: Heart, color: 'red' })),
-        ...(vehicleRes.data.data || []).map(p => ({ ...p, type: 'vehicle', icon: Car, color: 'blue' })),
-        ...(rentRes.data.data || []).map(p => ({ ...p, type: 'rent', icon: Building, color: 'green' }))
+        ...(lifeRes.data.data || []).map((p) => ({
+          ...p,
+          type: "life",
+          icon: Heart,
+          color: "red",
+        })),
+        ...(vehicleRes.data.data || []).map((p) => ({
+          ...p,
+          type: "vehicle",
+          icon: Car,
+          color: "blue",
+        })),
+        ...(rentRes.data.data || []).map((p) => ({
+          ...p,
+          type: "rent",
+          icon: Building,
+          color: "green",
+        })),
       ];
 
       setPolicies(allPolicies);
     } catch (error) {
-      console.error('Error loading policies:', error);
+      console.error("Error loading policies:", error);
     } finally {
       setLoading(false);
     }
   };
 
-  const filteredPolicies = filter === 'all'
-    ? policies
-    : policies.filter(p => p.type === filter);
+  const filteredPolicies =
+    filter === "all" ? policies : policies.filter((p) => p.type === filter);
+
+  const downloadPDF = async (
+    policyId,
+    policyType,
+    policyNumber,
+    inline = false
+  ) => {
+    try {
+      let response;
+      if (policyType === "life") {
+        response = await lifeInsuranceAPI.downloadPDF(policyId, inline);
+      } else if (policyType === "vehicle") {
+        response = await vehicleInsuranceAPI.downloadPDF(policyId, inline);
+      } else if (policyType === "rent") {
+        response = await rentInsuranceAPI.downloadPDF(policyId, inline);
+      }
+
+      const blob = new Blob([response.data], { type: "application/pdf" });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `poliza-${policyNumber}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error("Error downloading PDF:", error);
+      alert("Error al descargar el PDF. Intenta nuevamente.");
+    }
+  };
 
   const getStatusBadge = (status) => {
     const badges = {
-      active: 'bg-green-100 text-green-700',
-      issued: 'bg-green-100 text-green-700',
-      pending: 'bg-yellow-100 text-yellow-700',
-      cancelled: 'bg-red-100 text-red-700'
+      active: "bg-green-100 text-green-700",
+      issued: "bg-green-100 text-green-700",
+      pending: "bg-yellow-100 text-yellow-700",
+      cancelled: "bg-red-100 text-red-700",
     };
-    return badges[status] || 'bg-gray-100 text-gray-700';
+    return badges[status] || "bg-gray-100 text-gray-700";
   };
 
   if (loading) {
@@ -66,17 +124,45 @@ export default function MyPolicies() {
 
       {/* Filter Buttons */}
       <div className="mb-6 flex flex-wrap gap-3">
-        <button onClick={() => setFilter('all')} className={`px-4 py-2 rounded-lg font-medium transition-colors ${filter === 'all' ? 'bg-primary-600 text-white' : 'bg-white text-gray-700 hover:bg-gray-50'}`}>
+        <button
+          onClick={() => setFilter("all")}
+          className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+            filter === "all"
+              ? "bg-primary-600 text-white"
+              : "bg-white text-gray-700 hover:bg-gray-50"
+          }`}
+        >
           Todas ({policies.length})
         </button>
-        <button onClick={() => setFilter('life')} className={`px-4 py-2 rounded-lg font-medium transition-colors ${filter === 'life' ? 'bg-red-600 text-white' : 'bg-white text-gray-700 hover:bg-gray-50'}`}>
-          Vida ({policies.filter(p => p.type === 'life').length})
+        <button
+          onClick={() => setFilter("life")}
+          className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+            filter === "life"
+              ? "bg-red-600 text-white"
+              : "bg-white text-gray-700 hover:bg-gray-50"
+          }`}
+        >
+          Vida ({policies.filter((p) => p.type === "life").length})
         </button>
-        <button onClick={() => setFilter('vehicle')} className={`px-4 py-2 rounded-lg font-medium transition-colors ${filter === 'vehicle' ? 'bg-blue-600 text-white' : 'bg-white text-gray-700 hover:bg-gray-50'}`}>
-          Vehículo ({policies.filter(p => p.type === 'vehicle').length})
+        <button
+          onClick={() => setFilter("vehicle")}
+          className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+            filter === "vehicle"
+              ? "bg-blue-600 text-white"
+              : "bg-white text-gray-700 hover:bg-gray-50"
+          }`}
+        >
+          Vehículo ({policies.filter((p) => p.type === "vehicle").length})
         </button>
-        <button onClick={() => setFilter('rent')} className={`px-4 py-2 rounded-lg font-medium transition-colors ${filter === 'rent' ? 'bg-green-600 text-white' : 'bg-white text-gray-700 hover:bg-gray-50'}`}>
-          Renta ({policies.filter(p => p.type === 'rent').length})
+        <button
+          onClick={() => setFilter("rent")}
+          className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+            filter === "rent"
+              ? "bg-green-600 text-white"
+              : "bg-white text-gray-700 hover:bg-gray-50"
+          }`}
+        >
+          Renta ({policies.filter((p) => p.type === "rent").length})
         </button>
       </div>
 
@@ -85,23 +171,38 @@ export default function MyPolicies() {
         <div className="text-center py-12 bg-white rounded-xl shadow">
           <FileText className="h-16 w-16 text-gray-300 mx-auto mb-4" />
           <p className="text-xl text-gray-600">No tienes pólizas todavía</p>
-          <p className="text-gray-500 mt-2">¡Cotiza y contrata tu primer seguro!</p>
+          <p className="text-gray-500 mt-2">
+            ¡Cotiza y contrata tu primer seguro!
+          </p>
         </div>
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {filteredPolicies.map((policy) => (
-            <div key={policy.id} className="card hover:shadow-xl transition-shadow">
+            <div
+              key={policy.id}
+              className="card hover:shadow-xl transition-shadow"
+            >
               <div className="flex items-start justify-between mb-4">
                 <div className="flex items-center">
                   <div className={`bg-${policy.color}-100 p-3 rounded-lg mr-4`}>
-                    <policy.icon className={`h-6 w-6 text-${policy.color}-600`} />
+                    <policy.icon
+                      className={`h-6 w-6 text-${policy.color}-600`}
+                    />
                   </div>
                   <div>
-                    <h3 className="font-bold text-gray-900">{policy.policy_number}</h3>
-                    <p className="text-sm text-gray-500 capitalize">{policy.type.replace('_', ' ')}</p>
+                    <h3 className="font-bold text-gray-900">
+                      {policy.policy_number}
+                    </h3>
+                    <p className="text-sm text-gray-500 capitalize">
+                      {policy.type.replace("_", " ")}
+                    </p>
                   </div>
                 </div>
-                <span className={`px-3 py-1 rounded-full text-xs font-semibold ${getStatusBadge(policy.status)}`}>
+                <span
+                  className={`px-3 py-1 rounded-full text-xs font-semibold ${getStatusBadge(
+                    policy.status
+                  )}`}
+                >
                   {policy.status}
                 </span>
               </div>
@@ -113,7 +214,8 @@ export default function MyPolicies() {
                     Cobertura
                   </span>
                   <span className="font-semibold text-gray-900">
-                    ${parseFloat(policy.coverage_amount).toLocaleString('es-PE')}
+                    $
+                    {parseFloat(policy.coverage_amount).toLocaleString("es-PE")}
                   </span>
                 </div>
 
@@ -123,7 +225,10 @@ export default function MyPolicies() {
                     Prima Anual
                   </span>
                   <span className="font-semibold text-primary-600">
-                    ${parseFloat(policy.premium_amount).toLocaleString('es-PE', { minimumFractionDigits: 2 })}
+                    $
+                    {parseFloat(policy.premium_amount).toLocaleString("es-PE", {
+                      minimumFractionDigits: 2,
+                    })}
                   </span>
                 </div>
 
@@ -133,7 +238,7 @@ export default function MyPolicies() {
                     Inicio
                   </span>
                   <span className="text-sm text-gray-900">
-                    {new Date(policy.start_date).toLocaleDateString('es-PE')}
+                    {new Date(policy.start_date).toLocaleDateString("es-PE")}
                   </span>
                 </div>
               </div>
@@ -141,14 +246,19 @@ export default function MyPolicies() {
               {/* Policy Details */}
               {policy.life_details && (
                 <div className="mt-4 pt-4 border-t border-gray-200">
-                  <p className="text-xs text-gray-600">Beneficiarios: {policy.life_details.beneficiaries?.length || 0}</p>
+                  <p className="text-xs text-gray-600">
+                    Beneficiarios:{" "}
+                    {policy.life_details.beneficiaries?.length || 0}
+                  </p>
                 </div>
               )}
 
               {policy.vehicle_details && (
                 <div className="mt-4 pt-4 border-t border-gray-200">
                   <p className="text-xs text-gray-600">
-                    {policy.vehicle_details.vehicle_brand} {policy.vehicle_details.vehicle_model} ({policy.vehicle_details.vehicle_year})
+                    {policy.vehicle_details.vehicle_brand}{" "}
+                    {policy.vehicle_details.vehicle_model} (
+                    {policy.vehicle_details.vehicle_year})
                   </p>
                 </div>
               )}
@@ -156,16 +266,29 @@ export default function MyPolicies() {
               {policy.rent_details && (
                 <div className="mt-4 pt-4 border-t border-gray-200">
                   <p className="text-xs text-gray-600">
-                    {policy.rent_details.property_type} - ${policy.rent_details.monthly_rent}/mes
+                    {policy.rent_details.property_type} - $
+                    {policy.rent_details.monthly_rent}/mes
                   </p>
                 </div>
               )}
 
               {/* Action Buttons */}
               <div className="mt-4 pt-4 border-t flex gap-2">
-                {policy.status === 'active' && (
+                <button
+                  onClick={() =>
+                    downloadPDF(policy.id, policy.type, policy.policy_number)
+                  }
+                  className="flex-1 px-4 py-2 text-sm font-medium text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100 flex items-center justify-center"
+                  title="Descargar PDF de la póliza"
+                >
+                  <Download className="h-4 w-4 mr-1" />
+                  Descargar PDF
+                </button>
+                {policy.status === "active" && (
                   <button
-                    onClick={() => navigate(`/claims/create?policyId=${policy.id}`)}
+                    onClick={() =>
+                      navigate(`/claims/create?policyId=${policy.id}`)
+                    }
                     className="flex-1 px-4 py-2 text-sm font-medium text-primary-600 bg-primary-50 rounded-lg hover:bg-primary-100 flex items-center justify-center"
                   >
                     <AlertCircle className="h-4 w-4 mr-1" />

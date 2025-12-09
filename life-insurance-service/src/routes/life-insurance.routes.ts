@@ -12,7 +12,7 @@ const router = Router();
 const controller = new LifeInsuranceController();
 
 // Public routes
-router.get('/health', controller.healthCheck);
+router.get("/health", controller.healthCheck);
 
 // Protected routes (require authentication)
 router.post('/quote', authMiddleware, controller.getQuote);
@@ -38,9 +38,17 @@ router.get('/policies/:policyNumber', authMiddleware, controller.getPolicyByNumb
 router.put('/policies/:id/cancel', authMiddleware, controller.cancelPolicy);
 
 // Admin routes
-router.get('/policies', authMiddleware, adminMiddleware, controller.getAllPolicies);
-router.put('/policies/:id/activate', authMiddleware, adminMiddleware, controller.activatePolicy);
+router.get(
+  "/policies",
+  authMiddleware,
+  adminMiddleware,
+  controller.getAllPolicies
+);
+router.put(
+  "/policies/:id/activate",
+  authMiddleware,
+  adminMiddleware,
+  controller.activatePolicy
+);
 
 export default router;
-
-

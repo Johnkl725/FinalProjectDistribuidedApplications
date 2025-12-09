@@ -2,12 +2,12 @@
 // RENT INSURANCE REPOSITORY
 // ===============================================
 
-import { BaseRepository } from 'shared';
-import { RentInsurancePolicy } from '../models/rent-insurance.model';
+import { BaseRepository } from "shared";
+import { RentInsurancePolicy } from "../models/rent-insurance.model";
 
 export class RentInsuranceRepository extends BaseRepository<RentInsurancePolicy> {
   constructor() {
-    super('policies');
+    super("policies");
   }
 
   async createPolicy(policyData: any): Promise<RentInsurancePolicy> {
@@ -24,7 +24,7 @@ export class RentInsuranceRepository extends BaseRepository<RentInsurancePolicy>
       policyData.policy_number,
       policyData.user_id,
       policyData.insurance_type_id,
-      policyData.status || 'pending',
+      policyData.status || "pending",
       policyData.start_date,
       policyData.end_date,
       policyData.premium_amount,
@@ -45,7 +45,9 @@ export class RentInsuranceRepository extends BaseRepository<RentInsurancePolicy>
       ORDER BY p.created_at DESC
     `;
 
-    const result = await this.executeQuery<RentInsurancePolicy>(query, [userId]);
+    const result = await this.executeQuery<RentInsurancePolicy>(query, [
+      userId,
+    ]);
     return result.rows;
   }
 
@@ -57,11 +59,15 @@ export class RentInsuranceRepository extends BaseRepository<RentInsurancePolicy>
       WHERE p.id = $1 AND it.name = 'rent' AND p.is_current = true
     `;
 
-    const result = await this.executeQuery<RentInsurancePolicy>(query, [policyId]);
+    const result = await this.executeQuery<RentInsurancePolicy>(query, [
+      policyId,
+    ]);
     return result.rows[0] || null;
   }
 
-  async getPolicyByNumber(policyNumber: string): Promise<RentInsurancePolicy | null> {
+  async getPolicyByNumber(
+    policyNumber: string
+  ): Promise<RentInsurancePolicy | null> {
     const query = `
       SELECT p.*, it.name as insurance_type_name
       FROM policies p
@@ -69,7 +75,29 @@ export class RentInsuranceRepository extends BaseRepository<RentInsurancePolicy>
       WHERE p.policy_number = $1 AND it.name = 'rent' AND p.is_current = true
     `;
 
-    const result = await this.executeQuery<RentInsurancePolicy>(query, [policyNumber]);
+    const result = await this.executeQuery<RentInsurancePolicy>(query, [
+      policyNumber,
+    ]);
+    return result.rows[0] || null;
+  }
+
+  /**
+   * Get policy with user information (for PDF generation)
+   */
+  async getPolicyWithUserInfo(policyId: number): Promise<any | null> {
+    const query = `
+      SELECT 
+        p.*,
+        it.name as insurance_type_name,
+        u.first_name,
+        u.last_name,
+        u.email
+      FROM policies p
+      JOIN insurance_types it ON p.insurance_type_id = it.id
+      JOIN users u ON p.user_id = u.id
+      WHERE p.id = $1 AND it.name = 'rent'
+    `;
+    const result = await this.executeQuery(query, [policyId]);
     return result.rows[0] || null;
   }
 
@@ -88,7 +116,10 @@ export class RentInsuranceRepository extends BaseRepository<RentInsurancePolicy>
     return result.rows;
   }
 
-  async updatePolicyStatus(policyId: number, status: string): Promise<RentInsurancePolicy | null> {
+  async updatePolicyStatus(
+    policyId: number,
+    status: string
+  ): Promise<RentInsurancePolicy | null> {
     const query = `
       UPDATE policies
       SET status = $1, updated_at = CURRENT_TIMESTAMP
@@ -96,7 +127,10 @@ export class RentInsuranceRepository extends BaseRepository<RentInsurancePolicy>
       RETURNING *
     `;
 
-    const result = await this.executeQuery<RentInsurancePolicy>(query, [status, policyId]);
+    const result = await this.executeQuery<RentInsurancePolicy>(query, [
+      status,
+      policyId,
+    ]);
     return result.rows[0] || null;
   }
 
@@ -110,7 +144,9 @@ export class RentInsuranceRepository extends BaseRepository<RentInsurancePolicy>
       RETURNING *
     `;
 
-    const result = await this.executeQuery<RentInsurancePolicy>(query, [policyId]);
+    const result = await this.executeQuery<RentInsurancePolicy>(query, [
+      policyId,
+    ]);
     return result.rows[0] || null;
   }
 
@@ -121,7 +157,7 @@ export class RentInsuranceRepository extends BaseRepository<RentInsurancePolicy>
   }
 
   async generatePolicyNumber(): Promise<string> {
-    const prefix = 'RENT';
+    const prefix = "RENT";
     const timestamp = Date.now();
     const random = Math.floor(Math.random() * 10000);
     return `${prefix}-${timestamp}-${random}`;
@@ -203,5 +239,3 @@ export class RentInsuranceRepository extends BaseRepository<RentInsurancePolicy>
     return result.rows;
   }
 }
-
-

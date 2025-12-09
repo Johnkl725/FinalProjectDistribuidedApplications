@@ -2,16 +2,13 @@
 // LIFE INSURANCE SERVICE - BUSINESS LOGIC
 // ===============================================
 
-import { LifeInsuranceRepository } from '../repositories/life-insurance.repository';
-import { 
-  CreateLifeInsuranceDTO, 
-  QuoteLifeInsuranceDTO, 
-  LifeInsurancePolicy 
-} from '../models/life-insurance.model';
-import { 
-  InsuranceFactory, 
-  LifeInsuranceData 
-} from 'shared';
+import { LifeInsuranceRepository } from "../repositories/life-insurance.repository";
+import {
+  CreateLifeInsuranceDTO,
+  QuoteLifeInsuranceDTO,
+  LifeInsurancePolicy,
+} from "../models/life-insurance.model";
+import { InsuranceFactory, LifeInsuranceData } from "shared";
 
 export class LifeInsuranceService {
   private repository: LifeInsuranceRepository;
@@ -23,7 +20,9 @@ export class LifeInsuranceService {
   /**
    * Create a new life insurance policy
    */
-  async createPolicy(data: CreateLifeInsuranceDTO): Promise<LifeInsurancePolicy> {
+  async createPolicy(
+    data: CreateLifeInsuranceDTO
+  ): Promise<LifeInsurancePolicy> {
     // Validate beneficiaries
     this.validateBeneficiaries(data.beneficiaries);
 
@@ -39,11 +38,14 @@ export class LifeInsuranceService {
       beneficiaries: data.beneficiaries,
     };
 
-    const lifeInsurance = InsuranceFactory.createInsurance('life', insuranceData);
+    const lifeInsurance = InsuranceFactory.createInsurance(
+      "life",
+      insuranceData
+    );
 
     // Validate insurance data
     if (!lifeInsurance.validate()) {
-      throw new Error('Invalid life insurance data');
+      throw new Error("Invalid life insurance data");
     }
 
     // Calculate premium
@@ -65,7 +67,7 @@ export class LifeInsuranceService {
       policy_number: policyNumber,
       user_id: data.user_id,
       insurance_type_id: insuranceTypeId,
-      status: 'issued' as const, // New policy starts as 'issued', pending admin approval
+      status: "issued" as const, // New policy starts as 'issued', pending admin approval
       start_date: data.start_date,
       end_date: endDate.toISOString().split('T')[0], // Store as YYYY-MM-DD (1 year from start)
       premium_amount: premiumAmount,
@@ -81,10 +83,14 @@ export class LifeInsuranceService {
   /**
    * Get a quote for life insurance (no policy creation)
    */
-  async getQuote(data: QuoteLifeInsuranceDTO): Promise<{ premium: number; details: any }> {
+  async getQuote(
+    data: QuoteLifeInsuranceDTO
+  ): Promise<{ premium: number; details: any }> {
     // If end_date is not provided, assume a 12-month duration from start_date
     const startDate = new Date(data.start_date);
-    const endDate = data.end_date ? new Date(data.end_date) : this.addMonths(startDate, 12);
+    const endDate = data.end_date
+      ? new Date(data.end_date)
+      : this.addMonths(startDate, 12);
 
     const insuranceData: LifeInsuranceData = {
       userId: 0, // Dummy user ID for quote
@@ -92,12 +98,15 @@ export class LifeInsuranceService {
       startDate,
       endDate,
       age: data.age,
-      medicalHistory: 'N/A',
+      medicalHistory: "N/A",
       smoker: data.smoker,
       beneficiaries: [], // Not required for quote
     };
 
-    const lifeInsurance = InsuranceFactory.createInsurance('life', insuranceData);
+    const lifeInsurance = InsuranceFactory.createInsurance(
+      "life",
+      insuranceData
+    );
     const premium = lifeInsurance.calculatePremium();
 
     return {
@@ -121,34 +130,62 @@ export class LifeInsuranceService {
   /**
    * Get policy by ID
    */
-  async getPolicyById(policyId: number, userId?: number): Promise<LifeInsurancePolicy> {
+  async getPolicyById(
+    policyId: number,
+    userId?: number
+  ): Promise<LifeInsurancePolicy> {
     const policy = await this.repository.findById(policyId);
 
     if (!policy) {
-      throw new Error('Policy not found');
+      throw new Error("Policy not found");
     }
 
     // If userId is provided, verify ownership
     if (userId && policy.user_id !== userId) {
-      throw new Error('Unauthorized access to policy');
+      throw new Error("Unauthorized access to policy");
     }
 
     return policy;
   }
 
   /**
+   * Get policy with user info (for PDF)
+   */
+  async getPolicyWithUserInfo(policyId: number, userId?: number): Promise<any> {
+    const policy = await this.repository.getPolicyWithUserInfo(
+      policyId,
+      userId
+    );
+
+    if (!policy) {
+      throw new Error("Policy not found");
+    }
+
+    // Parse JSON fields safely
+    const lifeDetails =
+      typeof policy.life_details === "string"
+        ? JSON.parse(policy.life_details)
+        : policy.life_details;
+
+    return { ...policy, life_details: lifeDetails };
+  }
+
+  /**
    * Get policy by policy number
    */
-  async getPolicyByNumber(policyNumber: string, userId?: number): Promise<LifeInsurancePolicy> {
+  async getPolicyByNumber(
+    policyNumber: string,
+    userId?: number
+  ): Promise<LifeInsurancePolicy> {
     const policy = await this.repository.getPolicyByNumber(policyNumber);
 
     if (!policy) {
-      throw new Error('Policy not found');
+      throw new Error("Policy not found");
     }
 
     // If userId is provided, verify ownership
     if (userId && policy.user_id !== userId) {
-      throw new Error('Unauthorized access to policy');
+      throw new Error("Unauthorized access to policy");
     }
 
     return policy;
@@ -165,10 +202,10 @@ export class LifeInsuranceService {
    * Activate a policy (admin only - changes status from 'issued' to 'active')
    */
   async activatePolicy(policyId: number): Promise<LifeInsurancePolicy> {
-    const policy = await this.repository.updatePolicyStatus(policyId, 'active');
+    const policy = await this.repository.updatePolicyStatus(policyId, "active");
 
     if (!policy) {
-      throw new Error('Policy not found');
+      throw new Error("Policy not found");
     }
 
     return policy;
@@ -177,19 +214,22 @@ export class LifeInsuranceService {
   /**
    * Cancel a policy (sets status to 'cancelled' and end_date to current date)
    */
-  async cancelPolicy(policyId: number, userId?: number): Promise<LifeInsurancePolicy> {
+  async cancelPolicy(
+    policyId: number,
+    userId?: number
+  ): Promise<LifeInsurancePolicy> {
     // Verify ownership if userId provided
     if (userId) {
       const policy = await this.repository.findById(policyId);
       if (!policy || policy.user_id !== userId) {
-        throw new Error('Unauthorized or policy not found');
+        throw new Error("Unauthorized or policy not found");
       }
     }
 
     const policy = await this.repository.cancelPolicy(policyId);
 
     if (!policy) {
-      throw new Error('Policy not found');
+      throw new Error("Policy not found");
     }
 
     return policy;
@@ -200,20 +240,23 @@ export class LifeInsuranceService {
    */
   private validateBeneficiaries(beneficiaries: any[]): void {
     if (!beneficiaries || beneficiaries.length === 0) {
-      throw new Error('At least one beneficiary is required');
+      throw new Error("At least one beneficiary is required");
     }
 
-    const totalPercentage = beneficiaries.reduce((sum, b) => sum + b.percentage, 0);
+    const totalPercentage = beneficiaries.reduce(
+      (sum, b) => sum + b.percentage,
+      0
+    );
     if (totalPercentage !== 100) {
-      throw new Error('Beneficiaries percentages must sum to 100');
+      throw new Error("Beneficiaries percentages must sum to 100");
     }
 
     for (const beneficiary of beneficiaries) {
       if (!beneficiary.name || !beneficiary.relationship) {
-        throw new Error('Beneficiary name and relationship are required');
+        throw new Error("Beneficiary name and relationship are required");
       }
       if (beneficiary.percentage <= 0 || beneficiary.percentage > 100) {
-        throw new Error('Beneficiary percentage must be between 1 and 100');
+        throw new Error("Beneficiary percentage must be between 1 and 100");
       }
     }
   }
@@ -224,7 +267,9 @@ export class LifeInsuranceService {
   private calculateMonths(startDate: Date, endDate: Date): number {
     const start = new Date(startDate);
     const end = new Date(endDate);
-    const months = (end.getFullYear() - start.getFullYear()) * 12 + (end.getMonth() - start.getMonth());
+    const months =
+      (end.getFullYear() - start.getFullYear()) * 12 +
+      (end.getMonth() - start.getMonth());
     return Math.max(1, months);
   }
 
@@ -262,5 +307,3 @@ export class LifeInsuranceService {
     return await this.repository.getActivePoliciesSummary(filters);
   }
 }
-
-
