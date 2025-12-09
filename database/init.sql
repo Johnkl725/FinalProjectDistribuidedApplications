@@ -280,6 +280,8 @@ COMMENT ON TABLE policies IS 'Insurance policies with type-specific details stor
 COMMENT ON TABLE policy_claims IS 'Claims submitted against policies';
 COMMENT ON COLUMN policies.is_current IS 'SCD Type 2: Indica si este registro es la versión actual de la póliza';
 COMMENT ON COLUMN policies.effective_end_date IS 'SCD Type 2: Timestamp cuando esta versión dejó de ser la actual';
+
+SELECT
     p.end_date,
     p.status
 FROM policies p
