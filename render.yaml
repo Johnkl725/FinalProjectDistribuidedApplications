@@ -98,6 +98,3 @@ services:
     dockerfilePath: ./frontend/Dockerfile.prod
     dockerContext: .
     plan: free
-    envVars:
-      - key: VITE_API_URL
-        value: https://insurance-api-gateway.onrender.com/api
