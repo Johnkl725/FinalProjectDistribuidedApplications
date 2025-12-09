@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { FileText, Eye } from 'lucide-react';
 import axios from 'axios';
 import { formatCurrency } from '../../utils/currency';
+import { API_ENDPOINTS } from '../../config/api.config';
 
 export default function AllPolicies() {
   const [policies, setPolicies] = useState([]);
@@ -16,9 +17,9 @@ export default function AllPolicies() {
     try {
       const token = localStorage.getItem('token');
       const endpoints = [
-        'http://localhost:3000/api/life-insurance/policies',
-        'http://localhost:3000/api/vehicle-insurance/policies',
-        'http://localhost:3000/api/rent-insurance/policies'
+        `${API_ENDPOINTS.lifeInsurance}/policies`,
+        `${API_ENDPOINTS.vehicleInsurance}/policies`,
+        `${API_ENDPOINTS.rentInsurance}/policies`
       ];
 
       const responses = await Promise.all(

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { UserPlus, Users, Trash2, AlertCircle, CheckCircle, Edit, X } from 'lucide-react';
 import axios from 'axios';
+import { API_ENDPOINTS } from '../../config/api.config';
 
 export default function EmployeeManagement() {
   const [employees, setEmployees] = useState([]);
@@ -28,7 +29,7 @@ export default function EmployeeManagement() {
     setLoading(true);
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.get('http://localhost:3000/api/auth/employees', {
+      const response = await axios.get(API_ENDPOINTS.employees, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setEmployees(response.data.data);
@@ -42,7 +43,7 @@ export default function EmployeeManagement() {
   const fetchDepartments = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.get('http://localhost:3000/api/auth/departments', {
+      const response = await axios.get(API_ENDPOINTS.departments, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setDepartments(response.data.data);
@@ -93,7 +94,7 @@ export default function EmployeeManagement() {
         };
 
         await axios.put(
-          `http://localhost:3000/api/auth/employees/${editingEmployee.id}`,
+          `${API_ENDPOINTS.employees}/${editingEmployee.id}`,
           updateData,
           { headers: { Authorization: `Bearer ${token}` } }
         );
@@ -101,7 +102,7 @@ export default function EmployeeManagement() {
       } else {
         // Crear empleado
         await axios.post(
-          'http://localhost:3000/api/auth/employees',
+          API_ENDPOINTS.employees,
           formData,
           { headers: { Authorization: `Bearer ${token}` } }
         );
@@ -122,7 +123,7 @@ export default function EmployeeManagement() {
 
     try {
       const token = localStorage.getItem('token');
-      await axios.delete(`http://localhost:3000/api/auth/users/${userId}`, {
+      await axios.delete(`${API_ENDPOINTS.users}/${userId}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setSuccess('Empleado eliminado exitosamente');
@@ -138,7 +139,7 @@ export default function EmployeeManagement() {
     try {
       const token = localStorage.getItem('token');
       await axios.put(
-        `http://localhost:3000/api/auth/employees/${employeeId}/department`,
+        `${API_ENDPOINTS.employees}/${employeeId}/department`,
         { department_id: departmentId || null },
         { headers: { Authorization: `Bearer ${token}` } }
       );

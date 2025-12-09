@@ -17,6 +17,10 @@ RUN npm ci
 # Copy source code from frontend directory
 COPY frontend/ .
 
+# Set build-time environment variable
+ARG VITE_API_URL=https://insurance-api-gateway.onrender.com/api
+ENV VITE_API_URL=$VITE_API_URL
+
 # Build for production
 RUN npm run build
 
