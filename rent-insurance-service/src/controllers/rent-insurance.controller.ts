@@ -159,6 +159,72 @@ export class RentInsuranceController {
       successResponse({ status: 'healthy', service: 'rent-insurance-service' })
     );
   };
+
+  // ========================================
+  // NEW ENDPOINTS - DATABASE VIEWS
+  // ========================================
+
+  /**
+   * Get current policies with expiration indicators
+   * GET /rent-insurance/policies/current
+   */
+  getCurrentPolicies = async (req: Request, res: Response): Promise<void> => {
+    try {
+      const userId = (req as any).user.userId;
+      const policies = await this.service.getCurrentPolicies(userId);
+
+      res.status(HTTP_STATUS.OK).json(
+        successResponse(policies, 'Current policies retrieved successfully')
+      );
+    } catch (error: any) {
+      res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json(
+        errorResponse(error.message)
+      );
+    }
+  };
+
+  /**
+   * Get user policy statistics
+   * GET /rent-insurance/users/stats
+   */
+  getUserStats = async (req: Request, res: Response): Promise<void> => {
+    try {
+      const userId = (req as any).user.userId;
+      const stats = await this.service.getUserStats(userId);
+
+      res.status(HTTP_STATUS.OK).json(
+        successResponse(stats, 'User statistics retrieved successfully')
+      );
+    } catch (error: any) {
+      res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json(
+        errorResponse(error.message)
+      );
+    }
+  };
+
+  /**
+   * Get active policies summary (Admin/Employee only)
+   * GET /rent-insurance/admin/policies/summary
+   */
+  getActivePoliciesSummary = async (req: Request, res: Response): Promise<void> => {
+    try {
+      const { insurance_type, email } = req.query;
+      const filters = {
+        insurance_type: insurance_type as string,
+        email: email as string,
+      };
+
+      const summary = await this.service.getActivePoliciesSummary(filters);
+
+      res.status(HTTP_STATUS.OK).json(
+        successResponse(summary, 'Active policies summary retrieved successfully')
+      );
+    } catch (error: any) {
+      res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json(
+        errorResponse(error.message)
+      );
+    }
+  };
 }
 
 

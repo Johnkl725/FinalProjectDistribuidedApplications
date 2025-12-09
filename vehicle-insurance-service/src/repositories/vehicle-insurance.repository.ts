@@ -126,6 +126,82 @@ export class VehicleInsuranceRepository extends BaseRepository<VehicleInsuranceP
     const random = Math.floor(Math.random() * 10000);
     return `${prefix}-${timestamp}-${random}`;
   }
+
+  // ========================================
+  // NEW METHODS - DATABASE VIEWS
+  // ========================================
+
+  /**
+   * Get current policies with expiration indicators
+   */
+  async getCurrentPolicies(userId: number): Promise<any[]> {
+    const query = `
+      SELECT 
+        id, policy_number, user_id, insurance_type_id, status,
+        start_date, end_date, premium_amount, coverage_amount,
+        life_details, rent_details, vehicle_details,
+        created_at, updated_at, is_expired, days_until_expiration
+      FROM current_policies 
+      WHERE user_id = $1 AND insurance_type_id = (SELECT id FROM insurance_types WHERE name = 'vehicle')
+      ORDER BY created_at DESC
+    `;
+
+    const result = await this.executeQuery<any>(query, [userId]);
+    return result.rows;
+  }
+
+  /**
+   * Get user policy statistics
+   */
+  async getUserStats(userId: number): Promise<any> {
+    const query = `
+      SELECT 
+        id, email, first_name, last_name,
+        total_policies, active_policies, total_premium
+      FROM user_policy_stats 
+      WHERE id = $1
+    `;
+
+    const result = await this.executeQuery<any>(query, [userId]);
+    
+    // Return default stats if user has no policies
+    if (result.rows.length === 0) {
+      return {
+        id: userId,
+        total_policies: 0,
+        active_policies: 0,
+        total_premium: 0
+      };
+    }
+
+    return result.rows[0];
+  }
+
+  /**
+   * Get active policies summary (Admin/Employee)
+   */
+  async getActivePoliciesSummary(filters: { insurance_type?: string; email?: string }): Promise<any[]> {
+    let query = `
+      SELECT 
+        email, first_name, last_name, insurance_type, policy_number,
+        premium_amount, coverage_amount, start_date, end_date, status
+      FROM active_policies_summary 
+      WHERE insurance_type = 'vehicle'
+    `;
+
+    const params: any[] = [];
+
+    // Add email filter if provided
+    if (filters.email) {
+      params.push(`%${filters.email}%`);
+      query += ` AND email ILIKE $${params.length}`;
+    }
+
+    query += ` ORDER BY start_date DESC`;
+
+    const result = await this.executeQuery<any>(query, params);
+    return result.rows;
+  }
 }
 
 
