@@ -78,6 +78,7 @@ services:
       - DB_NAME=${DB_NAME:-insurance_db}
       - DB_USER=${DB_USER:-postgres}
       - DB_PASSWORD=${DB_PASSWORD:-postgres}
+      - DB_SSL=${DB_SSL:-false}
       - JWT_SECRET=${JWT_SECRET:-change-this-secret-key}
       - JWT_EXPIRES_IN=${JWT_EXPIRES_IN:-24h}
     depends_on:
@@ -110,6 +111,7 @@ services:
       - DB_NAME=${DB_NAME:-insurance_db}
       - DB_USER=${DB_USER:-postgres}
       - DB_PASSWORD=${DB_PASSWORD:-postgres}
+      - DB_SSL=${DB_SSL:-false}
       - JWT_SECRET=${JWT_SECRET:-change-this-secret-key}
     depends_on:
       db-init:
@@ -141,6 +143,7 @@ services:
       - DB_NAME=${DB_NAME:-insurance_db}
       - DB_USER=${DB_USER:-postgres}
       - DB_PASSWORD=${DB_PASSWORD:-postgres}
+      - DB_SSL=${DB_SSL:-false}
       - JWT_SECRET=${JWT_SECRET:-change-this-secret-key}
     depends_on:
       db-init:
@@ -172,6 +175,7 @@ services:
       - DB_NAME=${DB_NAME:-insurance_db}
       - DB_USER=${DB_USER:-postgres}
       - DB_PASSWORD=${DB_PASSWORD:-postgres}
+      - DB_SSL=${DB_SSL:-false}
       - JWT_SECRET=${JWT_SECRET:-change-this-secret-key}
     depends_on:
       db-init:
@@ -203,6 +207,7 @@ services:
       - DB_NAME=${DB_NAME:-insurance_db}
       - DB_USER=${DB_USER:-postgres}
       - DB_PASSWORD=${DB_PASSWORD:-postgres}
+      - DB_SSL=${DB_SSL:-false}
       - JWT_SECRET=${JWT_SECRET:-change-this-secret-key}
     depends_on:
       db-init:
