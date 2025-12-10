@@ -3,6 +3,8 @@ import { Clock, CheckCircle, AlertCircle } from 'lucide-react';
 import axios from 'axios';
 import { formatCurrency } from '../../utils/currency';
 import { API_ENDPOINTS } from '../../config/api.config';
+import { cachedApiCall, invalidateCache } from '../../utils/apiCache';
+import requestManager from '../../utils/requestManager';
 
 export default function PendingPolicies() {
   const [policies, setPolicies] = useState([]);
@@ -12,10 +14,16 @@ export default function PendingPolicies() {
 
   useEffect(() => {
     fetchPendingPolicies();
+    
+    // Cleanup: cancel pending requests when component unmounts
+    return () => {
+      requestManager.cancel('pending-policies');
+    };
   }, []);
 
   const fetchPendingPolicies = async () => {
     try {
+      const signal = requestManager.getSignal('pending-policies');
       const token = localStorage.getItem('token');
       const endpoints = [
         `${API_ENDPOINTS.lifeInsurance}/policies`,
@@ -23,9 +31,18 @@ export default function PendingPolicies() {
         `${API_ENDPOINTS.rentInsurance}/policies`
       ];
 
+      // Use cache with 20s TTL (shorter for pending policies)
       const responses = await Promise.all(
         endpoints.map((url, index) =>
-          axios.get(url, { headers: { Authorization: `Bearer ${token}` } })
+          cachedApiCall(
+            () => axios.get(url, { 
+              headers: { Authorization: `Bearer ${token}` },
+              signal 
+            }),
+            `pending-policies-${index}`,
+            [],
+            20000 // 20s cache (shorter for real-time data)
+          )
             .then(res => ({
               data: res.data.data.filter(p => p.status === 'issued'),
               type: ['Vida', 'Vehículo', 'Renta'][index],
@@ -40,7 +57,12 @@ export default function PendingPolicies() {
       );
 
       setPolicies(pendingPolicies);
+      requestManager.cleanup('pending-policies');
     } catch (err) {
+      if (err.name === 'CanceledError' || err.code === 'ERR_CANCELED') {
+        // Silently ignore canceled requests
+        return;
+      }
       console.error('Error al cargar pólizas pendientes', err);
     } finally {
       setLoading(false);
@@ -55,6 +77,10 @@ export default function PendingPolicies() {
         {},
         { headers: { Authorization: `Bearer ${token}` } }
       );
+      
+      // Invalidate all policies caches
+      invalidateCache('policies');
+      
       setSuccess('Póliza aprobada exitosamente');
       fetchPendingPolicies();
       setTimeout(() => setSuccess(''), 3000);

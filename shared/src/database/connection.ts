@@ -14,7 +14,7 @@ export class DatabaseConnection {
 
   private constructor() {
     // Connection pool size based on environment
-    const maxConnections = process.env.NODE_ENV === 'production' ? 3 : 10;
+    const maxConnections = process.env.NODE_ENV === 'production' ? 3 : 5;
     
     // Si existe DATABASE_URL, usarla directamente (para Render/producción)
     if (process.env.DATABASE_URL) {

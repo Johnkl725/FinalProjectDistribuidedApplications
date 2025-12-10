@@ -67,7 +67,6 @@ export const lifeInsuranceAPI = {
       }
     );
   },
-  // Database views endpoints
   getCurrentPolicies: () => api.get("/life-insurance/policies/current"),
   getUserStats: () => api.get("/life-insurance/users/stats"),
   getActivePoliciesSummary: (email) => {
@@ -93,7 +92,6 @@ export const vehicleInsuranceAPI = {
       { responseType: "blob" }
     );
   },
-  // Database views endpoints
   getCurrentPolicies: () => api.get("/vehicle-insurance/policies/current"),
   getUserStats: () => api.get("/vehicle-insurance/users/stats"),
   getActivePoliciesSummary: (email) => {
@@ -121,7 +119,6 @@ export const rentInsuranceAPI = {
       }
     );
   },
-  // Database views endpoints
   getCurrentPolicies: () => api.get("/rent-insurance/policies/current"),
   getUserStats: () => api.get("/rent-insurance/users/stats"),
   getActivePoliciesSummary: (email) => {
