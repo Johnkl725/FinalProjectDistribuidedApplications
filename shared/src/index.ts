@@ -16,6 +16,7 @@ export * from "./utils/validators";
 export * from "./utils/pdf-generator";
 export * from "./utils/request-queue";
 export * from "./utils/retry-handler";
+export * from "./utils/pool-monitor";
 
 // Error handling
 export * from "./errors/error-handler";
