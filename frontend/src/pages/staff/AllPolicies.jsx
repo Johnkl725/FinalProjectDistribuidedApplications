@@ -3,6 +3,8 @@ import { FileText, Eye } from 'lucide-react';
 import axios from 'axios';
 import { formatCurrency } from '../../utils/currency';
 import { API_ENDPOINTS } from '../../config/api.config';
+import { cachedApiCall } from '../../utils/apiCache';
+import requestManager from '../../utils/requestManager';
 
 export default function AllPolicies() {
   const [policies, setPolicies] = useState([]);
@@ -11,10 +13,16 @@ export default function AllPolicies() {
 
   useEffect(() => {
     fetchAllPolicies();
+    
+    // Cleanup: cancel pending requests when component unmounts
+    return () => {
+      requestManager.cancel('all-policies');
+    };
   }, []);
 
   const fetchAllPolicies = async () => {
     try {
+      const signal = requestManager.getSignal('all-policies');
       const token = localStorage.getItem('token');
       const endpoints = [
         `${API_ENDPOINTS.lifeInsurance}/policies`,
@@ -22,12 +30,36 @@ export default function AllPolicies() {
         `${API_ENDPOINTS.rentInsurance}/policies`
       ];
 
-      const responses = await Promise.all(
-        endpoints.map(url =>
-          axios.get(url, { headers: { Authorization: `Bearer ${token}` } })
-            .catch(() => ({ data: { data: [] } }))
-        )
-      );
+      // Use cache with 30s TTL
+      const responses = await Promise.all([
+        cachedApiCall(
+          () => axios.get(endpoints[0], { 
+            headers: { Authorization: `Bearer ${token}` },
+            signal 
+          }),
+          'all-life-policies',
+          [],
+          30000
+        ).catch(() => ({ data: { data: [] } })),
+        cachedApiCall(
+          () => axios.get(endpoints[1], { 
+            headers: { Authorization: `Bearer ${token}` },
+            signal 
+          }),
+          'all-vehicle-policies',
+          [],
+          30000
+        ).catch(() => ({ data: { data: [] } })),
+        cachedApiCall(
+          () => axios.get(endpoints[2], { 
+            headers: { Authorization: `Bearer ${token}` },
+            signal 
+          }),
+          'all-rent-policies',
+          [],
+          30000
+        ).catch(() => ({ data: { data: [] } }))
+      ]);
 
       const allPolicies = [
         ...responses[0].data.data.map(p => ({ ...p, type: 'Vida' })),
@@ -36,7 +68,12 @@ export default function AllPolicies() {
       ];
 
       setPolicies(allPolicies);
+      requestManager.cleanup('all-policies');
     } catch (err) {
+      if (err.name === 'CanceledError' || err.code === 'ERR_CANCELED') {
+        // Silently ignore canceled requests
+        return;
+      }
       console.error('Error al cargar pólizas', err);
     } finally {
       setLoading(false);

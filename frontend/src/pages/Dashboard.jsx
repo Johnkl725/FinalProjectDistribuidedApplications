@@ -16,6 +16,8 @@ import {
 } from 'lucide-react';
 import { lifeInsuranceAPI, vehicleInsuranceAPI, rentInsuranceAPI } from '../services/api';
 import UserStats from '../components/UserStats';
+import { cachedApiCall, invalidateCache } from '../utils/apiCache';
+import requestManager from '../utils/requestManager';
 
 export default function Dashboard() {
   const { user } = useAuth();
@@ -28,19 +30,50 @@ export default function Dashboard() {
 
   useEffect(() => {
     loadPolicies();
+    
+    // Cleanup: cancel pending requests when component unmounts
+    return () => {
+      requestManager.cancel('dashboard-policies');
+    };
   }, []);
 
   const loadPolicies = async () => {
     try {
-      // Combine all requests into single call to minimize database connections
+      // Get abort signal for this request type
+      const signal = requestManager.getSignal('dashboard-policies');
+      
       const token = localStorage.getItem('token');
       
       if (user.role === 'admin') {
-        // Admin: obtiene todas las pólizas en paralelo
+        // Admin: usa cache con TTL de 30 segundos
         const [lifeRes, vehicleRes, rentRes] = await Promise.all([
-          axios.get(`${API_ENDPOINTS.lifeInsurance}/policies`, { headers: { Authorization: `Bearer ${token}` } }),
-          axios.get(`${API_ENDPOINTS.vehicleInsurance}/policies`, { headers: { Authorization: `Bearer ${token}` } }),
-          axios.get(`${API_ENDPOINTS.rentInsurance}/policies`, { headers: { Authorization: `Bearer ${token}` } }),
+          cachedApiCall(
+            () => axios.get(`${API_ENDPOINTS.lifeInsurance}/policies`, { 
+              headers: { Authorization: `Bearer ${token}` },
+              signal 
+            }),
+            'admin-life-policies',
+            [],
+            30000 // 30s cache
+          ),
+          cachedApiCall(
+            () => axios.get(`${API_ENDPOINTS.vehicleInsurance}/policies`, { 
+              headers: { Authorization: `Bearer ${token}` },
+              signal 
+            }),
+            'admin-vehicle-policies',
+            [],
+            30000
+          ),
+          cachedApiCall(
+            () => axios.get(`${API_ENDPOINTS.rentInsurance}/policies`, { 
+              headers: { Authorization: `Bearer ${token}` },
+              signal 
+            }),
+            'admin-rent-policies',
+            [],
+            30000
+          ),
         ]);
 
         setPolicies({
@@ -49,11 +82,26 @@ export default function Dashboard() {
           rent: rentRes.data.data || []
         });
       } else {
-        // Usuario: obtiene solo sus pólizas - 3 requests necesarios
+        // Usuario: usa cache con TTL de 30 segundos
         const [lifeRes, vehicleRes, rentRes] = await Promise.all([
-          lifeInsuranceAPI.getMyPolicies(),
-          vehicleInsuranceAPI.getMyPolicies(),
-          rentInsuranceAPI.getMyPolicies(),
+          cachedApiCall(
+            () => lifeInsuranceAPI.getMyPolicies(),
+            'user-life-policies',
+            [],
+            30000
+          ),
+          cachedApiCall(
+            () => vehicleInsuranceAPI.getMyPolicies(),
+            'user-vehicle-policies',
+            [],
+            30000
+          ),
+          cachedApiCall(
+            () => rentInsuranceAPI.getMyPolicies(),
+            'user-rent-policies',
+            [],
+            30000
+          ),
         ]);
 
         setPolicies({
@@ -62,7 +110,13 @@ export default function Dashboard() {
           rent: rentRes.data.data || []
         });
       }
+      
+      requestManager.cleanup('dashboard-policies');
     } catch (error) {
+      if (error.name === 'CanceledError' || error.code === 'ERR_CANCELED') {
+        // Silently ignore canceled requests
+        return;
+      }
       console.error('Error loading policies:', error);
     } finally {
       setLoading(false);
