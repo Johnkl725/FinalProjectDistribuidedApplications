@@ -37,17 +37,17 @@ router.get('/policies/id/:id', authMiddleware, controller.getPolicyById);
 router.get('/policies/:policyNumber', authMiddleware, controller.getPolicyByNumber);
 router.put('/policies/:id/cancel', authMiddleware, controller.cancelPolicy);
 
-// Admin routes
+// Admin and Employee routes (staff can view and manage all policies)
 router.get(
   "/policies",
   authMiddleware,
-  adminMiddleware,
+  employeeMiddleware,  // Changed from adminMiddleware to allow employees
   controller.getAllPolicies
 );
 router.put(
   "/policies/:id/activate",
   authMiddleware,
-  adminMiddleware,
+  employeeMiddleware,  // Changed from adminMiddleware to allow employees
   controller.activatePolicy
 );
 
