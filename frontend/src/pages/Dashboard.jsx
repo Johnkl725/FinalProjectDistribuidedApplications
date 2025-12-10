@@ -30,7 +30,7 @@ export default function Dashboard() {
 
   useEffect(() => {
     loadPolicies();
-    
+
     // Cleanup: cancel pending requests when component unmounts
     return () => {
       requestManager.cancel('dashboard-policies');
@@ -41,36 +41,36 @@ export default function Dashboard() {
     try {
       // Get abort signal for this request type
       const signal = requestManager.getSignal('dashboard-policies');
-      
+
       const token = localStorage.getItem('token');
-      
-      if (user.role === 'admin') {
-        // Admin: usa cache con TTL de 30 segundos
+
+      if (user.role === 'admin' || user.role === 'employee') {
+        // Admin and Employee: show ALL policies in the system
         const [lifeRes, vehicleRes, rentRes] = await Promise.all([
           cachedApiCall(
-            () => axios.get(`${API_ENDPOINTS.lifeInsurance}/policies`, { 
+            () => axios.get(`${API_ENDPOINTS.lifeInsurance}/policies`, {
               headers: { Authorization: `Bearer ${token}` },
-              signal 
+              signal
             }),
-            'admin-life-policies',
+            `${user.role}-life-policies`,
             [],
             30000 // 30s cache
           ),
           cachedApiCall(
-            () => axios.get(`${API_ENDPOINTS.vehicleInsurance}/policies`, { 
+            () => axios.get(`${API_ENDPOINTS.vehicleInsurance}/policies`, {
               headers: { Authorization: `Bearer ${token}` },
-              signal 
+              signal
             }),
-            'admin-vehicle-policies',
+            `${user.role}-vehicle-policies`,
             [],
             30000
           ),
           cachedApiCall(
-            () => axios.get(`${API_ENDPOINTS.rentInsurance}/policies`, { 
+            () => axios.get(`${API_ENDPOINTS.rentInsurance}/policies`, {
               headers: { Authorization: `Bearer ${token}` },
-              signal 
+              signal
             }),
-            'admin-rent-policies',
+            `${user.role}-rent-policies`,
             [],
             30000
           ),
@@ -82,7 +82,7 @@ export default function Dashboard() {
           rent: rentRes.data.data || []
         });
       } else {
-        // Usuario: usa cache con TTL de 30 segundos
+        // Customer: show only THEIR policies
         const [lifeRes, vehicleRes, rentRes] = await Promise.all([
           cachedApiCall(
             () => lifeInsuranceAPI.getMyPolicies(),
@@ -110,7 +110,7 @@ export default function Dashboard() {
           rent: rentRes.data.data || []
         });
       }
-      
+
       requestManager.cleanup('dashboard-policies');
     } catch (error) {
       if (error.name === 'CanceledError' || error.code === 'ERR_CANCELED') {
@@ -202,39 +202,39 @@ export default function Dashboard() {
             </div>
           </div>
 
-        <div className="card">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600">Pólizas Activas</p>
-              <p className="text-3xl font-bold text-green-600 mt-2">{activePolicies}</p>
+          <div className="card">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600">Pólizas Activas</p>
+                <p className="text-3xl font-bold text-green-600 mt-2">{activePolicies}</p>
+              </div>
+              <div className="bg-green-100 p-3 rounded-lg">
+                <Shield className="h-8 w-8 text-green-600" />
+              </div>
             </div>
-            <div className="bg-green-100 p-3 rounded-lg">
-              <Shield className="h-8 w-8 text-green-600" />
+            <div className="mt-4 flex items-center text-sm text-green-600">
+              <TrendingUp className="h-4 w-4 mr-1" />
+              <span>Protegido</span>
             </div>
           </div>
-          <div className="mt-4 flex items-center text-sm text-green-600">
-            <TrendingUp className="h-4 w-4 mr-1" />
-            <span>Protegido</span>
-          </div>
-        </div>
 
-        <div className="card">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600">Primas Totales</p>
-              <p className="text-3xl font-bold text-gray-900 mt-2">
-                ${totalPremiums.toLocaleString('es-PE', { minimumFractionDigits: 2 })}
-              </p>
+          <div className="card">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600">Primas Totales</p>
+                <p className="text-3xl font-bold text-gray-900 mt-2">
+                  ${totalPremiums.toLocaleString('es-PE', { minimumFractionDigits: 2 })}
+                </p>
+              </div>
+              <div className="bg-yellow-100 p-3 rounded-lg">
+                <DollarSign className="h-8 w-8 text-yellow-600" />
+              </div>
             </div>
-            <div className="bg-yellow-100 p-3 rounded-lg">
-              <DollarSign className="h-8 w-8 text-yellow-600" />
+            <div className="mt-4 text-sm text-gray-600">
+              Anuales
             </div>
-          </div>
-          <div className="mt-4 text-sm text-gray-600">
-            Anuales
           </div>
         </div>
-      </div>
       )}
 
       {/* Insurance Types / Expiring Policies */}
@@ -308,9 +308,9 @@ export default function Dashboard() {
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-xl font-bold text-gray-900">Pólizas Recientes</h2>
             {user.role !== 'admin' && (
-            <Link to="/policies" className="text-primary-600 hover:text-primary-700 font-medium text-sm">
-              Ver todas
-            </Link>
+              <Link to="/policies" className="text-primary-600 hover:text-primary-700 font-medium text-sm">
+                Ver todas
+              </Link>
             )}
           </div>
 
@@ -333,13 +333,12 @@ export default function Dashboard() {
                     </div>
                   </div>
                   <div className="text-right">
-                    <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                      policy.status === 'active' || policy.status === 'issued'
+                    <span className={`px-3 py-1 rounded-full text-xs font-semibold ${policy.status === 'active' || policy.status === 'issued'
                         ? 'bg-green-100 text-green-700'
                         : policy.status === 'pending'
-                        ? 'bg-yellow-100 text-yellow-700'
-                        : 'bg-red-100 text-red-700'
-                    }`}>
+                          ? 'bg-yellow-100 text-yellow-700'
+                          : 'bg-red-100 text-red-700'
+                      }`}>
                       {policy.status}
                     </span>
                     <p className="text-sm text-gray-600 mt-1">
