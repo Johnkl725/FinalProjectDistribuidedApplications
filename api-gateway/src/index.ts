@@ -27,7 +27,17 @@ const PORT = process.env.PORT || 3000;
 // GLOBAL MIDDLEWARE
 // ===============================================
 app.use(helmet()); // Security headers
-app.use(cors()); // Enable CORS
+app.use(cors({
+  origin: [
+    'http://localhost:5173',           // Local development
+    'http://localhost:3000',           // Local production
+    'http://178.128.70.171',           // VPS frontend
+    /^https:\/\/.*\.vercel\.app$/,    // All Vercel deployments
+  ],
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+})); // Enable CORS
 app.use(morgan('dev')); // HTTP request logger
 app.use(requestLogger); // Custom request logger
 // Rate limiting: enabled only when RATE_LIMIT_ENABLED is 'true' (case-insensitive)

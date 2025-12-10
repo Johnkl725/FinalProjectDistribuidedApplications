@@ -1,0 +1,10 @@
+{
+    "version": 2,
+    "buildCommand": "npm install && npm run build",
+    "outputDirectory": "dist",
+    "installCommand": "npm install",
+    "framework": "vite",
+    "env": {
+        "VITE_API_URL": "http://178.128.70.171:3000/api"
+    }
+}
