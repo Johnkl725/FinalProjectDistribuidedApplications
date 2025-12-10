@@ -14,15 +14,17 @@ export class DatabaseConnection {
 
   private constructor() {
     // Connection pool size based on environment
-    const maxConnections = process.env.NODE_ENV === 'production' ? 3 : 5;
+    // Production: 2 connections × 7 services = 14 (safe under Render's 22 limit)
+    // Development: 5 connections × 7 services = 35
+    const maxConnections = process.env.NODE_ENV === 'production' ? 2 : 5;
     
     // Si existe DATABASE_URL, usarla directamente (para Render/producción)
     if (process.env.DATABASE_URL) {
       this.pool = new Pool({
         connectionString: process.env.DATABASE_URL,
         max: maxConnections, // Reduced for Render free tier (22 connection limit)
-        min: 1,
-        idleTimeoutMillis: 30000,
+        min: 0, // Don't keep idle connections in production
+        idleTimeoutMillis: 20000, // Close idle connections faster
         connectionTimeoutMillis: 10000,
         ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
       });
