@@ -34,8 +34,7 @@ export class AuthService {
     // Check if email already exists
     const existingUser = await this.userRepository.findByEmail(userData.email);
     if (existingUser) {
-      // Security: Generic error - don't help enumerate existing users
-      throw new Error('Unable to complete registration');
+      throw new Error('Este correo electrónico ya está registrado');
     }
 
     // Hash password
@@ -87,8 +86,7 @@ export class AuthService {
     // Check if email already exists
     const existingUser = await this.userRepository.findByEmail(employeeData.email);
     if (existingUser) {
-      // Security: Generic error - don't help enumerate existing users
-      throw new Error('Unable to create employee');
+      throw new Error('Este correo electrónico ya está registrado');
     }
 
     // Hash password
@@ -125,21 +123,18 @@ export class AuthService {
     // Find user by email
     const user = await this.userRepository.findByEmail(credentials.email.toLowerCase());
     if (!user) {
-      // Security: Generic error message - don't reveal if email exists
-      throw new Error('Invalid credentials');
+      throw new Error('Credenciales incorrectas');
     }
 
     // Check if user is active
     if (!user.is_active) {
-      // Security: Same generic message - don't reveal account status
-      throw new Error('Invalid credentials');
+      throw new Error('Esta cuenta ha sido desactivada. Contacta al soporte');
     }
 
     // Verify password
     const isPasswordValid = await bcrypt.compare(credentials.password, user.password_hash!);
     if (!isPasswordValid) {
-      // Security: Same generic message - don't reveal password is wrong
-      throw new Error('Invalid credentials');
+      throw new Error('Credenciales incorrectas');
     }
 
     // Generate JWT token

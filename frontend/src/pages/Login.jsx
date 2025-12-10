@@ -26,6 +26,14 @@ export default function Login() {
     setLoading(true);
     setError('');
 
+    // Basic email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(formData.email)) {
+      setError('Por favor ingresa un correo electrónico válido');
+      setLoading(false);
+      return;
+    }
+
     const result = await login(formData.email, formData.password);
 
     if (result.success) {
@@ -69,9 +77,9 @@ export default function Login() {
             </p>
           </div>
 
-          <Alert 
-            type="error" 
-            message={error} 
+          <Alert
+            type="error"
+            message={error}
             onClose={handleCloseAlert}
             dismissible={true}
           />

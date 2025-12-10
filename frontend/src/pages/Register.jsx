@@ -1,8 +1,10 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { Shield, Mail, Lock, User } from 'lucide-react';
+import { Shield, Mail, Lock, User, AlertCircle } from 'lucide-react';
 import Alert from '../components/Alert';
+import PasswordStrengthIndicator from '../components/PasswordStrengthIndicator';
+import { validateField, validatePassword } from '../utils/FormValidation';
 
 export default function Register() {
   const navigate = useNavigate();
@@ -14,14 +16,58 @@ export default function Register() {
     first_name: '',
     last_name: '',
   });
+  const [errors, setErrors] = useState({});
+  const [touched, setTouched] = useState({});
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
   const handleChange = (e) => {
+    const { name, value } = e.target;
     setFormData({
       ...formData,
-      [e.target.name]: e.target.value,
+      [name]: value,
     });
+
+    // Validate field if it has been touched
+    if (touched[name]) {
+      const fieldError = validateField(name, value, formData);
+      setErrors({
+        ...errors,
+        [name]: fieldError,
+      });
+    }
+  };
+
+  const handleBlur = (e) => {
+    const { name, value } = e.target;
+    setTouched({
+      ...touched,
+      [name]: true,
+    });
+
+    // Validate on blur
+    const fieldError = validateField(name, value, formData);
+    setErrors({
+      ...errors,
+      [name]: fieldError,
+    });
+  };
+
+  const validateForm = () => {
+    const newErrors = {};
+    Object.keys(formData).forEach((key) => {
+      const error = validateField(key, formData[key], formData);
+      if (error) newErrors[key] = error;
+    });
+
+    // Additional password validation
+    const passwordErrors = validatePassword(formData.password);
+    if (passwordErrors.length > 0) {
+      newErrors.password = passwordErrors.join(', ');
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
   };
 
   const handleSubmit = async (e) => {
@@ -29,15 +75,17 @@ export default function Register() {
     setLoading(true);
     setError('');
 
-    if (formData.password !== formData.confirmPassword) {
-      setError('Las contraseñas no coinciden');
-      setLoading(false);
-      return;
-    }
+    // Mark all fields as touched
+    const allTouched = {};
+    Object.keys(formData).forEach((key) => {
+      allTouched[key] = true;
+    });
+    setTouched(allTouched);
 
-    if (formData.password.length < 6) {
-      setError('La contraseña debe tener al menos 6 caracteres');
+    // Validate form
+    if (!validateForm()) {
       setLoading(false);
+      setError('Por favor corrige los errores en el formulario');
       return;
     }
 
@@ -54,6 +102,15 @@ export default function Register() {
 
   const handleCloseAlert = () => {
     setError('');
+  };
+
+  const isFormValid = () => {
+    return Object.keys(errors).length === 0 &&
+      formData.email &&
+      formData.password &&
+      formData.confirmPassword &&
+      formData.first_name &&
+      formData.last_name;
   };
 
   return (
@@ -85,9 +142,9 @@ export default function Register() {
             </p>
           </div>
 
-          <Alert 
-            type="error" 
-            message={error} 
+          <Alert
+            type="error"
+            message={error}
             onClose={handleCloseAlert}
             dismissible={true}
           />
@@ -109,10 +166,17 @@ export default function Register() {
                     required
                     value={formData.first_name}
                     onChange={handleChange}
-                    className="input-field pl-10"
+                    onBlur={handleBlur}
+                    className={`input-field pl-10 ${errors.first_name && touched.first_name ? 'border-red-500 focus:ring-red-500' : ''}`}
                     placeholder="Juan"
                   />
                 </div>
+                {errors.first_name && touched.first_name && (
+                  <p className="mt-1 text-xs text-red-600 flex items-center gap-1">
+                    <AlertCircle className="h-3 w-3" />
+                    {errors.first_name}
+                  </p>
+                )}
               </div>
 
               <div>
@@ -126,9 +190,16 @@ export default function Register() {
                   required
                   value={formData.last_name}
                   onChange={handleChange}
-                  className="input-field"
+                  onBlur={handleBlur}
+                  className={`input-field ${errors.last_name && touched.last_name ? 'border-red-500 focus:ring-red-500' : ''}`}
                   placeholder="Pérez"
                 />
+                {errors.last_name && touched.last_name && (
+                  <p className="mt-1 text-xs text-red-600 flex items-center gap-1">
+                    <AlertCircle className="h-3 w-3" />
+                    {errors.last_name}
+                  </p>
+                )}
               </div>
             </div>
 
@@ -147,10 +218,17 @@ export default function Register() {
                   required
                   value={formData.email}
                   onChange={handleChange}
-                  className="input-field pl-10"
+                  onBlur={handleBlur}
+                  className={`input-field pl-10 ${errors.email && touched.email ? 'border-red-500 focus:ring-red-500' : ''}`}
                   placeholder="tu@email.com"
                 />
               </div>
+              {errors.email && touched.email && (
+                <p className="mt-1 text-xs text-red-600 flex items-center gap-1">
+                  <AlertCircle className="h-3 w-3" />
+                  {errors.email}
+                </p>
+              )}
             </div>
 
             <div>
@@ -168,11 +246,18 @@ export default function Register() {
                   required
                   value={formData.password}
                   onChange={handleChange}
-                  className="input-field pl-10"
+                  onBlur={handleBlur}
+                  className={`input-field pl-10 ${errors.password && touched.password ? 'border-red-500 focus:ring-red-500' : ''}`}
                   placeholder="••••••••"
                 />
               </div>
-              <p className="mt-1 text-xs text-gray-500">Mínimo 6 caracteres</p>
+              {errors.password && touched.password && (
+                <p className="mt-1 text-xs text-red-600 flex items-center gap-1">
+                  <AlertCircle className="h-3 w-3" />
+                  {errors.password}
+                </p>
+              )}
+              <PasswordStrengthIndicator password={formData.password} />
             </div>
 
             <div>
@@ -190,10 +275,17 @@ export default function Register() {
                   required
                   value={formData.confirmPassword}
                   onChange={handleChange}
-                  className="input-field pl-10"
+                  onBlur={handleBlur}
+                  className={`input-field pl-10 ${errors.confirmPassword && touched.confirmPassword ? 'border-red-500 focus:ring-red-500' : ''}`}
                   placeholder="••••••••"
                 />
               </div>
+              {errors.confirmPassword && touched.confirmPassword && (
+                <p className="mt-1 text-xs text-red-600 flex items-center gap-1">
+                  <AlertCircle className="h-3 w-3" />
+                  {errors.confirmPassword}
+                </p>
+              )}
             </div>
 
             <div className="flex items-start">
