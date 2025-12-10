@@ -20,7 +20,7 @@ export class DatabaseConnection {
         max: 20,
         idleTimeoutMillis: 30000,
         connectionTimeoutMillis: 10000,
-        ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
+        ssl: this.getSSLConfig(),
       });
     } else {
       // Fallback a variables individuales (para desarrollo)
@@ -33,7 +33,7 @@ export class DatabaseConnection {
         max: 20,
         idleTimeoutMillis: 30000,
         connectionTimeoutMillis: 10000,
-        ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
+        ssl: this.getSSLConfig(),
       });
     }
 
@@ -44,6 +44,29 @@ export class DatabaseConnection {
     this.pool.on('error', (err) => {
       console.error('❌ Unexpected database error:', err);
     });
+  }
+
+  /**
+   * Get SSL configuration based on environment variables
+   */
+  private getSSLConfig(): boolean | { rejectUnauthorized: boolean } {
+    // Check DB_SSL environment variable first
+    if (process.env.DB_SSL !== undefined) {
+      const dbSSL = process.env.DB_SSL.toLowerCase();
+      if (dbSSL === 'false' || dbSSL === '0' || dbSSL === 'no') {
+        console.log('🔓 SSL disabled for database connection (DB_SSL=false)');
+        return false;
+      }
+    }
+
+    // Default: Use SSL in production, no SSL in development
+    if (process.env.NODE_ENV === 'production') {
+      console.log('🔒 SSL enabled for database connection (production mode)');
+      return { rejectUnauthorized: false };
+    }
+
+    console.log('🔓 SSL disabled for database connection (development mode)');
+    return false;
   }
 
   /**
