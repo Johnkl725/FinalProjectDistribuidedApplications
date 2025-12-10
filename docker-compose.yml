@@ -8,6 +8,35 @@ version: '3.8'
 
 services:
   # ===============================================
+  # PostgreSQL Database
+  # ===============================================
+  postgres:
+    image: postgres:16-alpine
+    container_name: insurance-postgres-prod
+    environment:
+      POSTGRES_USER: ${DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-postgres}
+      POSTGRES_DB: ${DB_NAME:-insurance_db}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - insurance-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-postgres}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: always
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # ===============================================
   # Database Initialization Service
   # Runs init.sql only if tables don't exist
   # ===============================================
@@ -15,15 +44,18 @@ services:
     image: postgres:16-alpine
     container_name: insurance-db-init
     environment:
-      - DB_HOST=${DB_HOST}
+      - DB_HOST=${DB_HOST:-postgres}
       - DB_PORT=${DB_PORT:-5432}
-      - DB_NAME=${DB_NAME}
-      - DB_USER=${DB_USER}
-      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_NAME=${DB_NAME:-insurance_db}
+      - DB_USER=${DB_USER:-postgres}
+      - DB_PASSWORD=${DB_PASSWORD:-postgres}
     volumes:
       - ./database:/app/database
       - ./scripts/init-db.sh:/app/init-db.sh
     command: sh /app/init-db.sh
+    depends_on:
+      postgres:
+        condition: service_healthy
     networks:
       - insurance-network
     restart: "no"  # Run once and exit
@@ -41,12 +73,12 @@ services:
     environment:
       - PORT=3001
       - NODE_ENV=production
-      - DB_HOST=${DB_HOST}
+      - DB_HOST=${DB_HOST:-postgres}
       - DB_PORT=${DB_PORT:-5432}
-      - DB_NAME=${DB_NAME}
-      - DB_USER=${DB_USER}
-      - DB_PASSWORD=${DB_PASSWORD}
-      - JWT_SECRET=${JWT_SECRET}
+      - DB_NAME=${DB_NAME:-insurance_db}
+      - DB_USER=${DB_USER:-postgres}
+      - DB_PASSWORD=${DB_PASSWORD:-postgres}
+      - JWT_SECRET=${JWT_SECRET:-change-this-secret-key}
       - JWT_EXPIRES_IN=${JWT_EXPIRES_IN:-24h}
     depends_on:
       db-init:
@@ -73,12 +105,12 @@ services:
     environment:
       - PORT=3002
       - NODE_ENV=production
-      - DB_HOST=${DB_HOST}
+      - DB_HOST=${DB_HOST:-postgres}
       - DB_PORT=${DB_PORT:-5432}
-      - DB_NAME=${DB_NAME}
-      - DB_USER=${DB_USER}
-      - DB_PASSWORD=${DB_PASSWORD}
-      - JWT_SECRET=${JWT_SECRET}
+      - DB_NAME=${DB_NAME:-insurance_db}
+      - DB_USER=${DB_USER:-postgres}
+      - DB_PASSWORD=${DB_PASSWORD:-postgres}
+      - JWT_SECRET=${JWT_SECRET:-change-this-secret-key}
     depends_on:
       db-init:
         condition: service_completed_successfully
@@ -104,12 +136,12 @@ services:
     environment:
       - PORT=3003
       - NODE_ENV=production
-      - DB_HOST=${DB_HOST}
+      - DB_HOST=${DB_HOST:-postgres}
       - DB_PORT=${DB_PORT:-5432}
-      - DB_NAME=${DB_NAME}
-      - DB_USER=${DB_USER}
-      - DB_PASSWORD=${DB_PASSWORD}
-      - JWT_SECRET=${JWT_SECRET}
+      - DB_NAME=${DB_NAME:-insurance_db}
+      - DB_USER=${DB_USER:-postgres}
+      - DB_PASSWORD=${DB_PASSWORD:-postgres}
+      - JWT_SECRET=${JWT_SECRET:-change-this-secret-key}
     depends_on:
       db-init:
         condition: service_completed_successfully
@@ -135,12 +167,12 @@ services:
     environment:
       - PORT=3004
       - NODE_ENV=production
-      - DB_HOST=${DB_HOST}
+      - DB_HOST=${DB_HOST:-postgres}
       - DB_PORT=${DB_PORT:-5432}
-      - DB_NAME=${DB_NAME}
-      - DB_USER=${DB_USER}
-      - DB_PASSWORD=${DB_PASSWORD}
-      - JWT_SECRET=${JWT_SECRET}
+      - DB_NAME=${DB_NAME:-insurance_db}
+      - DB_USER=${DB_USER:-postgres}
+      - DB_PASSWORD=${DB_PASSWORD:-postgres}
+      - JWT_SECRET=${JWT_SECRET:-change-this-secret-key}
     depends_on:
       db-init:
         condition: service_completed_successfully
@@ -166,12 +198,12 @@ services:
     environment:
       - PORT=3005
       - NODE_ENV=production
-      - DB_HOST=${DB_HOST}
+      - DB_HOST=${DB_HOST:-postgres}
       - DB_PORT=${DB_PORT:-5432}
-      - DB_NAME=${DB_NAME}
-      - DB_USER=${DB_USER}
-      - DB_PASSWORD=${DB_PASSWORD}
-      - JWT_SECRET=${JWT_SECRET}
+      - DB_NAME=${DB_NAME:-insurance_db}
+      - DB_USER=${DB_USER:-postgres}
+      - DB_PASSWORD=${DB_PASSWORD:-postgres}
+      - JWT_SECRET=${JWT_SECRET:-change-this-secret-key}
     depends_on:
       db-init:
         condition: service_completed_successfully
@@ -197,7 +229,7 @@ services:
     environment:
       - PORT=3000
       - NODE_ENV=production
-      - JWT_SECRET=${JWT_SECRET}
+      - JWT_SECRET=${JWT_SECRET:-change-this-secret-key}
       - AUTH_SERVICE_URL=http://auth-service:3001
       - LIFE_SERVICE_URL=http://life-insurance-service:3002
       - RENT_SERVICE_URL=http://rent-insurance-service:3003
@@ -227,11 +259,11 @@ services:
     build:
       context: .
       dockerfile: frontend/Dockerfile.prod
+      args:
+        - VITE_API_URL=${VITE_API_URL:-http://localhost:3000/api}
     container_name: insurance-frontend-prod
     ports:
       - "80:80"
-    environment:
-      - VITE_API_URL=http://localhost:3000
     depends_on:
       - api-gateway
     networks:
@@ -252,5 +284,6 @@ networks:
 
 # ===============================================
 # Volumes
-# NOTE: No postgres-data volume needed - using external cloud database
 # ===============================================
+volumes:
+  postgres-data:

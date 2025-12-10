@@ -95,6 +95,24 @@ git push origin main
 # O usar Manual Deploy en Render Dashboard
 ```
 
+### Deploy en VPS (Producción)
+```bash
+# 1. Conectar al VPS
+ssh root@178.128.70.171
+
+# 2. Clonar y configurar
+git clone <repo-url>
+cd FinalProjectDistribuidedApplications
+cp .env.example .env
+nano .env  # Configurar variables
+
+# 3. Desplegar
+chmod +x deploy-vps.sh
+./deploy-vps.sh
+
+# Ver guía completa: QUICK-START-VPS.md
+```
+
 ## 📊 Puertos de Servicios
 
 | Servicio | Puerto | Propósito |
