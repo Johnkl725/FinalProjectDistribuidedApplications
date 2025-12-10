@@ -67,6 +67,12 @@ export const lifeInsuranceAPI = {
       }
     );
   },
+  getCurrentPolicies: () => api.get("/life-insurance/policies/current"),
+  getUserStats: () => api.get("/life-insurance/users/stats"),
+  getActivePoliciesSummary: (email) => {
+    const params = email ? `?email=${encodeURIComponent(email)}` : '';
+    return api.get(`/life-insurance/admin/policies/summary${params}`);
+  },
 };
 
 // ========== VEHICLE INSURANCE API ==========
@@ -85,6 +91,12 @@ export const vehicleInsuranceAPI = {
       `/vehicle-insurance/policies/${id}/pdf${inline ? "?inline=1" : ""}`,
       { responseType: "blob" }
     );
+  },
+  getCurrentPolicies: () => api.get("/vehicle-insurance/policies/current"),
+  getUserStats: () => api.get("/vehicle-insurance/users/stats"),
+  getActivePoliciesSummary: (email) => {
+    const params = email ? `?email=${encodeURIComponent(email)}` : '';
+    return api.get(`/vehicle-insurance/admin/policies/summary${params}`);
   },
 };
 
@@ -106,6 +118,12 @@ export const rentInsuranceAPI = {
         responseType: "blob",
       }
     );
+  },
+  getCurrentPolicies: () => api.get("/rent-insurance/policies/current"),
+  getUserStats: () => api.get("/rent-insurance/users/stats"),
+  getActivePoliciesSummary: (email) => {
+    const params = email ? `?email=${encodeURIComponent(email)}` : '';
+    return api.get(`/rent-insurance/admin/policies/summary${params}`);
   },
 };
 

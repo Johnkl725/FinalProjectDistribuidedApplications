@@ -15,6 +15,8 @@ import {
   vehicleInsuranceAPI,
   rentInsuranceAPI,
 } from "../services/api";
+import { cachedApiCall } from '../utils/apiCache';
+import requestManager from '../utils/requestManager';
 
 export default function MyPolicies() {
   const navigate = useNavigate();
@@ -24,14 +26,37 @@ export default function MyPolicies() {
 
   useEffect(() => {
     loadPolicies();
+    
+    // Cleanup: cancel pending requests when component unmounts
+    return () => {
+      requestManager.cancel('my-policies');
+    };
   }, []);
 
   const loadPolicies = async () => {
     try {
+      const signal = requestManager.getSignal('my-policies');
+      
+      // Use cache with 30s TTL
       const [lifeRes, vehicleRes, rentRes] = await Promise.all([
-        lifeInsuranceAPI.getMyPolicies(),
-        vehicleInsuranceAPI.getMyPolicies(),
-        rentInsuranceAPI.getMyPolicies(),
+        cachedApiCall(
+          () => lifeInsuranceAPI.getMyPolicies(),
+          'my-life-policies',
+          [],
+          30000
+        ),
+        cachedApiCall(
+          () => vehicleInsuranceAPI.getMyPolicies(),
+          'my-vehicle-policies',
+          [],
+          30000
+        ),
+        cachedApiCall(
+          () => rentInsuranceAPI.getMyPolicies(),
+          'my-rent-policies',
+          [],
+          30000
+        ),
       ]);
 
       const allPolicies = [
@@ -56,7 +81,12 @@ export default function MyPolicies() {
       ];
 
       setPolicies(allPolicies);
+      requestManager.cleanup('my-policies');
     } catch (error) {
+      if (error.name === 'CanceledError' || error.code === 'ERR_CANCELED') {
+        console.log('🚫 My Policies request cancelled');
+        return;
+      }
       console.error("Error loading policies:", error);
     } finally {
       setLoading(false);
