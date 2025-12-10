@@ -13,11 +13,15 @@ export class DatabaseConnection {
   private pool: Pool;
 
   private constructor() {
+    // Connection pool size based on environment
+    const maxConnections = process.env.NODE_ENV === 'production' ? 3 : 10;
+    
     // Si existe DATABASE_URL, usarla directamente (para Render/producción)
     if (process.env.DATABASE_URL) {
       this.pool = new Pool({
         connectionString: process.env.DATABASE_URL,
-        max: 20,
+        max: maxConnections, // Reduced for Render free tier (22 connection limit)
+        min: 1,
         idleTimeoutMillis: 30000,
         connectionTimeoutMillis: 10000,
         ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
@@ -30,7 +34,8 @@ export class DatabaseConnection {
         database: process.env.DB_NAME || 'insurance_db',
         user: process.env.DB_USER || 'postgres',
         password: process.env.DB_PASSWORD || 'postgres',
-        max: 20,
+        max: maxConnections,
+        min: 1,
         idleTimeoutMillis: 30000,
         connectionTimeoutMillis: 10000,
         ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,

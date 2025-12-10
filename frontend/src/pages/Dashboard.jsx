@@ -32,40 +32,36 @@ export default function Dashboard() {
 
   const loadPolicies = async () => {
     try {
-      let lifeData = [];
-      let vehicleData = [];
-      let rentData = [];
-
+      // Combine all requests into single call to minimize database connections
+      const token = localStorage.getItem('token');
+      
       if (user.role === 'admin') {
-        // Admin: obtiene todas las pólizas
-        const token = localStorage.getItem('token');
+        // Admin: obtiene todas las pólizas en paralelo
         const [lifeRes, vehicleRes, rentRes] = await Promise.all([
           axios.get(`${API_ENDPOINTS.lifeInsurance}/policies`, { headers: { Authorization: `Bearer ${token}` } }),
           axios.get(`${API_ENDPOINTS.vehicleInsurance}/policies`, { headers: { Authorization: `Bearer ${token}` } }),
           axios.get(`${API_ENDPOINTS.rentInsurance}/policies`, { headers: { Authorization: `Bearer ${token}` } }),
         ]);
 
-        lifeData = lifeRes.data.data || [];
-        vehicleData = vehicleRes.data.data || [];
-        rentData = rentRes.data.data || [];
+        setPolicies({
+          life: lifeRes.data.data || [],
+          vehicle: vehicleRes.data.data || [],
+          rent: rentRes.data.data || []
+        });
       } else {
-        // Usuario normal: obtiene solo sus pólizas
+        // Usuario: obtiene solo sus pólizas - 3 requests necesarios
         const [lifeRes, vehicleRes, rentRes] = await Promise.all([
           lifeInsuranceAPI.getMyPolicies(),
           vehicleInsuranceAPI.getMyPolicies(),
           rentInsuranceAPI.getMyPolicies(),
         ]);
 
-        lifeData = lifeRes.data.data || [];
-        vehicleData = vehicleRes.data.data || [];
-        rentData = rentRes.data.data || [];
+        setPolicies({
+          life: lifeRes.data.data || [],
+          vehicle: vehicleRes.data.data || [],
+          rent: rentRes.data.data || []
+        });
       }
-
-      setPolicies({
-        life: lifeData,
-        vehicle: vehicleData,
-        rent: rentData
-      });
     } catch (error) {
       console.error('Error loading policies:', error);
     } finally {
