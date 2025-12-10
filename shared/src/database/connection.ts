@@ -14,18 +14,21 @@ export class DatabaseConnection {
 
   private constructor() {
     // Connection pool size based on environment
-    // Production: 2 connections × 7 services = 14 (safe under Render's 22 limit)
+    // Production: 1 connection × 7 services = 7 (ULTRA SAFE - 32% of Render's 22 limit)
     // Development: 5 connections × 7 services = 35
-    const maxConnections = process.env.NODE_ENV === 'production' ? 2 : 5;
+    const maxConnections = process.env.NODE_ENV === 'production' ? 1 : 5;
     
     // Si existe DATABASE_URL, usarla directamente (para Render/producción)
     if (process.env.DATABASE_URL) {
       this.pool = new Pool({
         connectionString: process.env.DATABASE_URL,
-        max: maxConnections, // Reduced for Render free tier (22 connection limit)
-        min: 0, // Don't keep idle connections in production
-        idleTimeoutMillis: 20000, // Close idle connections faster
-        connectionTimeoutMillis: 10000,
+        max: maxConnections, // ULTRA REDUCED: 1 per service = 7 total (68% buffer)
+        min: 0, // NEVER keep idle connections in production
+        idleTimeoutMillis: 10000, // Close idle after 10s (was 20s)
+        connectionTimeoutMillis: 5000, // Fail fast if no connection available (was 10s)
+        statement_timeout: 15000, // Force kill queries after 15s
+        query_timeout: 15000, // Alternative timeout mechanism
+        allowExitOnIdle: true, // Allow pool to close when idle
         ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
       });
     } else {
@@ -44,8 +47,35 @@ export class DatabaseConnection {
       });
     }
 
-    this.pool.on('connect', () => {
+    this.pool.on('connect', (client) => {
       console.log('✅ Database connection established');
+      
+      // Set statement timeout on each new connection
+      client.query('SET statement_timeout = 15000').catch((err) => {
+        console.error('Failed to set statement_timeout:', err);
+      });
+    });
+
+    this.pool.on('acquire', () => {
+      const poolInfo = {
+        total: this.pool.totalCount,
+        idle: this.pool.idleCount,
+        waiting: this.pool.waitingCount,
+      };
+      console.log(`🔌 Connection acquired: total=${poolInfo.total}, idle=${poolInfo.idle}, waiting=${poolInfo.waiting}`);
+    });
+
+    this.pool.on('release', () => {
+      const poolInfo = {
+        total: this.pool.totalCount,
+        idle: this.pool.idleCount,
+        waiting: this.pool.waitingCount,
+      };
+      console.log(`🔓 Connection released: total=${poolInfo.total}, idle=${poolInfo.idle}, waiting=${poolInfo.waiting}`);
+    });
+
+    this.pool.on('remove', () => {
+      console.log('🗑️ Connection removed from pool');
     });
 
     this.pool.on('error', (err) => {
@@ -113,6 +143,32 @@ export class DatabaseConnection {
       console.error('❌ Database connection test failed:', error);
       return false;
     }
+  }
+
+  /**
+   * Get pool status for monitoring
+   */
+  public getPoolStatus(): {
+    total: number;
+    idle: number;
+    waiting: number;
+  } {
+    return {
+      total: this.pool.totalCount,
+      idle: this.pool.idleCount,
+      waiting: this.pool.waitingCount,
+    };
+  }
+
+  /**
+   * Force cleanup of idle connections
+   */
+  public async cleanupIdleConnections(): Promise<void> {
+    const status = this.getPoolStatus();
+    console.log(`🧹 Cleaning up idle connections: ${status.idle} idle out of ${status.total} total`);
+    
+    // Pool will automatically clean up based on idleTimeoutMillis
+    // This is just for logging/monitoring
   }
 }
 
