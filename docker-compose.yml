@@ -204,7 +204,7 @@ services:
       - VEHICLE_SERVICE_URL=http://vehicle-insurance-service:3004
       - CLAIMS_SERVICE_URL=http://claims-service:3005
       - RATE_LIMIT_WINDOW_MS=${RATE_LIMIT_WINDOW_MS:-900000}
-      - RATE_LIMIT_MAX_REQUESTS=${RATE_LIMIT_MAX_REQUESTS:-100}
+      - RATE_LIMIT_MAX_REQUESTS=${RATE_LIMIT_MAX_REQUESTS:-500}
     depends_on:
       - auth-service
       - life-insurance-service
