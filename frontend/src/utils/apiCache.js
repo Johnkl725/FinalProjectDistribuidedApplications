@@ -2,12 +2,18 @@
  * API Cache Utility
  * Implements a simple in-memory cache with TTL (Time To Live)
  * Reduces redundant API calls and database connections
+ * 
+ * OPTIMIZED FOR PRODUCTION:
+ * - Longer TTL (5 minutes default) to reduce backend pressure
+ * - Request deduplication to prevent parallel duplicate requests
+ * - Smart invalidation on mutations
  */
 
 class ApiCache {
   constructor() {
     this.cache = new Map();
     this.pendingRequests = new Map(); // Para evitar requests duplicados simultáneos
+    this.requestCount = { hits: 0, misses: 0, deduplicated: 0 };
   }
 
   /**
@@ -31,16 +37,19 @@ class ApiCache {
       return null;
     }
 
+    this.requestCount.hits++;
     return cached.data;
   }
 
   /**
    * Set cache with TTL
+   * DEFAULT TTL increased to 5 minutes (300000ms) for better performance
    */
-  set(key, data, ttlMs = 30000) {
+  set(key, data, ttlMs = 300000) {
     this.cache.set(key, {
       data,
       expiresAt: Date.now() + ttlMs,
+      cachedAt: Date.now(),
     });
   }
 
@@ -80,32 +89,59 @@ class ApiCache {
   clearAll() {
     this.cache.clear();
     this.pendingRequests.clear();
+    this.requestCount = { hits: 0, misses: 0, deduplicated: 0 };
   }
 
   /**
    * Clear cache entries matching pattern
    */
   clearPattern(pattern) {
+    let cleared = 0;
     for (const key of this.cache.keys()) {
       if (key.includes(pattern)) {
         this.cache.delete(key);
+        cleared++;
       }
     }
+    console.log(`🧹 Cleared ${cleared} cache entries matching: ${pattern}`);
+  }
+
+  /**
+   * Get cache statistics
+   */
+  getStats() {
+    const total = this.requestCount.hits + this.requestCount.misses;
+    const hitRate = total > 0 ? ((this.requestCount.hits / total) * 100).toFixed(1) : 0;
+    
+    return {
+      cacheSize: this.cache.size,
+      pendingRequests: this.pendingRequests.size,
+      hits: this.requestCount.hits,
+      misses: this.requestCount.misses,
+      deduplicated: this.requestCount.deduplicated,
+      hitRate: `${hitRate}%`,
+    };
   }
 }
 
 // Singleton instance
 const apiCache = new ApiCache();
 
+// Log cache stats every 60 seconds (both dev and production)
+setInterval(() => {
+  const stats = apiCache.getStats();
+  console.log('📊 Cache Stats:', stats);
+}, 60000);
+
 /**
  * Wrapper function to add caching to any API call
  * @param {Function} apiFn - The API function to wrap
  * @param {string} fnName - Unique name for this function
  * @param {Array} args - Arguments for the API function
- * @param {number} ttl - Time to live in milliseconds (default 30s)
+ * @param {number} ttl - Time to live in milliseconds (default 5 minutes)
  * @returns {Promise} - The API response
  */
-export async function cachedApiCall(apiFn, fnName, args = [], ttl = 30000) {
+export async function cachedApiCall(apiFn, fnName, args = [], ttl = 300000) {
   const cacheKey = apiCache.generateKey(fnName, args);
 
   // Check cache first
@@ -119,11 +155,14 @@ export async function cachedApiCall(apiFn, fnName, args = [], ttl = 30000) {
   const pending = apiCache.getPending(cacheKey);
   if (pending) {
     console.log(`⏳ Request deduplication: ${fnName}`);
+    apiCache.requestCount.deduplicated++;
     return pending;
   }
 
   // Make the actual API call
   console.log(`🌐 Cache MISS: ${fnName} - Fetching...`);
+  apiCache.requestCount.misses++;
+  
   const promise = apiFn(...args)
     .then((response) => {
       apiCache.set(cacheKey, response, ttl);
